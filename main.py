@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 from db import Base, engine
-from routers import auth, users
+from routers import auth, users, costumers
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -54,4 +54,10 @@ app.include_router(
     users.router_user,
     prefix='/user',
     tags=['User section'],
+)
+
+app.include_router(
+    costumers.router_costumer,
+    prefix='/costumers',
+    tags=['Costumers section'],
 )

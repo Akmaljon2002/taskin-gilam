@@ -1,5 +1,7 @@
+import pytz
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, TIMESTAMP
 from db import Base
+from datetime import datetime
 
 
 class User(Base):
@@ -36,28 +38,28 @@ class User(Base):
 class Costumers(Base):
     __tablename__ = "costumers"
     id = Column(Integer, primary_key=True)
-    chat_id = Column(Integer)
-    costumers_filial_id = Column(Integer)
+    chat_id = Column(Integer, default=0)
+    costumers_filial_id = Column(Integer, default=0)
     costumer_name = Column(String(255))
     costumer_phone_1 = Column(String(255))
     costumer_phone_2 = Column(String(255))
-    costumer_phone_3 = Column(String(255))
+    costumer_phone_3 = Column(String(255), default='')
     costumer_addres = Column(String(255))
-    costumer_nationality = Column(String(255))
-    costumer_date = Column(DateTime)
-    costumer_source = Column(String(255))
-    orienter = Column(String(255))
-    costumer_status = Column(String(255))
-    costumer_turi = Column(String(255))
-    saygak_id = Column(Integer)
-    mintaqa_id = Column(Integer)
-    manba = Column(String(100))
-    token = Column(String(100))
-    parol = Column(String(100))
-    user_id = Column(Integer)
-    millat_id = Column(Integer)
-    call_count = Column(Integer)
-    calling = Column(Boolean)
-    izoh = Column(String(255))
-    created_at = Column(TIMESTAMP)
-    updated_at = Column(TIMESTAMP)
+    customer_nationality = Column(String(255), default='')
+    costumer_date = Column(DateTime, default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    costumer_source = Column(String(255), default='')
+    orienter = Column(String(255), default='')
+    costumer_status = Column(String(255), default='')
+    costumer_turi = Column(String(255), default='')
+    saygak_id = Column(Integer, default=0)
+    mintaqa_id = Column(Integer, default=0)
+    manba = Column(String(100), default='')
+    token = Column(String(100), default='')
+    parol = Column(String(100), default='')
+    user_id = Column(Integer, default=0)
+    millat_id = Column(Integer, default=0)
+    call_count = Column(Integer, default=0)
+    calling = Column(Boolean, default=False)
+    izoh = Column(String(255), default='')
+    created_at = Column(TIMESTAMP, default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(TIMESTAMP, default=0)
