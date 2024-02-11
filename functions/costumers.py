@@ -16,13 +16,14 @@ def all_costumers(search, page, limit, db):
     return pagination(costumers, page, limit)
 
 
-def create_costumer(form, db):
+def create_costumer(form, user_id, db):
     new_costumer = Costumers(
         costumer_name=form.costumer_name,
         costumer_phone_1=form.costumer_phone_1,
         costumer_phone_2=form.costumer_phone_2,
         costumer_addres=form.costumer_addres,
         manba=form.manba,
+        user_id=user_id,
         costumer_turi=form.costumer_turi,
         izoh=form.izoh,
         millat_id=form.millat_id

@@ -1,3 +1,5 @@
+import inspect
+
 from fastapi import APIRouter, Depends, HTTPException
 from db import get_db
 from sqlalchemy.orm import Session
@@ -5,6 +7,7 @@ from models.models import Costumers
 from functions.costumers import all_costumers, update_costumer, create_costumer
 from routers.auth import current_active_user
 from schemas.costumers import CostumerCreate, CostumerUpdate
+from schemas.users import UserCurrent
 from utils.role_verification import role_verification
 
 router_costumer = APIRouter()
@@ -12,8 +15,9 @@ router_costumer = APIRouter()
 
 @router_costumer.post('/create', )
 async def add_costumer(form: CostumerCreate,
-                       db: Session = Depends(get_db)):
-    if create_costumer(form, db):
+                       db: Session = Depends(get_db), current_user: UserCurrent = Depends(current_active_user)):
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
+    if create_costumer(form, current_user.id, db):
         raise HTTPException(status_code=201, detail="Created successfully!")
 
 

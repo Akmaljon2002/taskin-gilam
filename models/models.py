@@ -1,5 +1,7 @@
 import pytz
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, TIMESTAMP
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, TIMESTAMP, ForeignKey
+from sqlalchemy.orm import relationship
+
 from db import Base
 from datetime import datetime
 
@@ -34,6 +36,8 @@ class User(Base):
     api_token = Column(String(255), default='')
     zakaz_status = Column(Integer)
 
+    costumer = relationship('Costumers', back_populates='user')
+
 
 class Costumers(Base):
     __tablename__ = "costumers"
@@ -56,10 +60,12 @@ class Costumers(Base):
     manba = Column(String(100), default='')
     token = Column(String(100), default='')
     parol = Column(String(100), default='')
-    user_id = Column(Integer, default=0)
+    user_id = Column(Integer, ForeignKey("user.id"))
     millat_id = Column(Integer, default=0)
     call_count = Column(Integer, default=0)
     calling = Column(Boolean, default=False)
     izoh = Column(String(255), default='')
     created_at = Column(TIMESTAMP, default=datetime.now(pytz.timezone('Asia/Tashkent')))
     updated_at = Column(TIMESTAMP, default=0)
+
+    user = relationship('User', back_populates='costumer')

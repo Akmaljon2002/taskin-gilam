@@ -57,7 +57,7 @@ async def current_user(db: Session = Depends(get_db), token: str = Depends(oauth
 
 
 async def current_active_user(user: UserCurrent = Depends(current_user)):
-    if user.is_active:
+    if user.status == 10:
         return user
     raise HTTPException(status_code=400, detail="Inactive user")
 
@@ -85,9 +85,9 @@ async def get_current_user_socket(websocket: WebSocket, db: Session = Depends(ge
 
 @login_router.post("/token")
 async def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()):
-    user = db.query(User).filter_by(username=form_data.username, is_active=True).first()
+    user = db.query(User).filter_by(username=form_data.username, status=10).first()
     if user:
-        is_validate_password = pwd_context.verify(form_data.password, user.password)
+        is_validate_password = pwd_context.verify(form_data.password, user.password_hash)
     else:
         is_validate_password = False
     if not is_validate_password:
@@ -97,7 +97,7 @@ async def login_for_access_token(db: Session = Depends(get_db), form_data: OAuth
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     db.query(User).filter_by(username=form_data.username).update({
-        User.token: access_token
+        User.api_token: access_token
     })
     db.commit()
     return {'id': user.id, "access_token": access_token, "role": user.role}
