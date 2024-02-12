@@ -1,5 +1,5 @@
 import pytz
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, TIMESTAMP, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, TIMESTAMP, ForeignKey, Date
 from sqlalchemy.orm import relationship
 
 from db import Base
@@ -66,6 +66,41 @@ class Costumers(Base):
     calling = Column(Boolean, default=False)
     izoh = Column(String(255), default='')
     created_at = Column(TIMESTAMP, default=datetime.now(pytz.timezone('Asia/Tashkent')))
-    updated_at = Column(TIMESTAMP, default=0)
+    updated_at = Column(TIMESTAMP, default='0000-00-00 00:00:00	')
 
     user = relationship('User', back_populates='costumer')
+
+
+class Filial(Base):
+    __tablename__ = "filial"
+    filial_id = Column(Integer, primary_key=True)
+    filial_name = Column(String(255))
+    filial_address = Column(String(255))
+    filial_phone = Column(String(255))
+    filial_director_id = Column(Integer)
+    filial_work_date = Column(Date)
+    filial_destination = Column(String(255))
+    filial_status = Column(String(255))
+    logo = Column(String(255))
+    mini_logo = Column(String(255))
+    order_dog = Column(Integer)
+    order_brak = Column(Integer)
+    mintaqa_id = Column(Integer)
+    barcode = Column(Integer)
+    balance = Column(Integer)
+    transfer_driver = Column(Integer)
+    adding_nation = Column(Integer)
+    sizing = Column(Integer)
+    changing_coast = Column(Integer)
+    landing = Column(Boolean)
+    sms_coast = Column(Integer)
+    send_sms = Column(Boolean)
+    country_id = Column(Integer)
+    stilaj = Column(Boolean)
+    costumer_input = Column(Integer)
+    to_all_drivers = Column(Boolean)
+    transfer_operator = Column(Boolean)
+    transfer_admin_savdo = Column(Boolean)
+    buyurtma_limit = Column(Integer)
+    created_at = Column(TIMESTAMP, default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(TIMESTAMP, default='0000-00-00 00:00:00')
