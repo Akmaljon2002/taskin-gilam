@@ -1,10 +1,9 @@
 import inspect
-
 from fastapi import APIRouter, Depends, HTTPException
 from db import get_db
 from sqlalchemy.orm import Session
 from models.models import Costumers
-from functions.costumers import all_costumers, update_costumer, create_costumer
+from functions.costumers import all_costumers, update_costumer, create_costumer, history_costumer
 from routers.auth import current_active_user
 from schemas.costumers import CostumerCreate, CostumerUpdate
 from schemas.users import UserCurrent
@@ -33,3 +32,9 @@ async def get_costumers(search: str = None, costumer_id: int = 0, page: int = 1,
 async def costumer_update(form: CostumerUpdate, db: Session = Depends(get_db)):
     if await update_costumer(form, db):
         raise HTTPException(status_code=200, detail="Updated successfully!")
+
+
+@router_costumer.get('/money_from_costumer', status_code=200)
+async def money_from_costumer(search: str = None, costumer_id: int = ..., page: int = 1,
+                              limit: int = 25, db: Session = Depends(get_db)):
+    return history_costumer(search, page, limit, costumer_id, db)

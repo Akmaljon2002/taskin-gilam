@@ -1,5 +1,5 @@
 import pytz
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, TIMESTAMP, ForeignKey, Date
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, TIMESTAMP, ForeignKey, Date, Float
 from sqlalchemy.orm import relationship
 
 from db import Base
@@ -37,6 +37,8 @@ class User(Base):
     zakaz_status = Column(Integer)
 
     costumer = relationship('Costumers', back_populates='user')
+    order = relationship('Orders', back_populates='operator')
+    clean = relationship('Clean', back_populates='user')
 
 
 class Costumers(Base):
@@ -65,10 +67,11 @@ class Costumers(Base):
     call_count = Column(Integer, default=0)
     calling = Column(Boolean, default=False)
     izoh = Column(String(255), default='')
-    created_at = Column(TIMESTAMP, default=datetime.now(pytz.timezone('Asia/Tashkent')))
-    updated_at = Column(TIMESTAMP, default='0000-00-00 00:00:00	')
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
 
     user = relationship('User', back_populates='costumer')
+    clean = relationship('Clean', back_populates='costumer')
 
 
 class Filial(Base):
@@ -102,5 +105,146 @@ class Filial(Base):
     transfer_operator = Column(Boolean)
     transfer_admin_savdo = Column(Boolean)
     buyurtma_limit = Column(Integer)
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+
+    order = relationship('Orders', back_populates='filial')
+
+
+class Orders(Base):
+    __tablename__ = "orders"
+    order_id = Column(Integer, primary_key=True)
+    nomer = Column(Integer)
+    costumer_id = Column(String(100))
+    order_filial_id = Column(Integer, ForeignKey("filial.filial_id"))
+    order_date = Column(DateTime)
+    olibk_sana = Column(DateTime)
+    izoh = Column(String(255))
+    order_price = Column(Integer)
+    order_price_status = Column(String(111))
+    order_last_price = Column(Integer)
+    order_status = Column(String(255))
+    operator_id = Column(Integer, ForeignKey("user.id"))
+    order_driver = Column(String(111))
+    finish_driver = Column(Integer)
+    geoplugin_longitude = Column(String(255))
+    geoplugin_latitude = Column(String(255))
+    order_skidka_foiz = Column(String(255))
+    order_skidka_sum = Column(String(255))
+    tartib_raqam = Column(Integer)
+    topshir_sana = Column(Date)
+    dog = Column(String(255))
+    brak = Column(String(255))
+    top_sana = Column(DateTime)
+    saygak_id = Column(Integer)
+    own = Column(Integer)
+    mintaqa_id = Column(Integer, ForeignKey("mintaqa.id"))
+    ch_foiz = Column(String(50))
+    ch_sum = Column(String(50))
+    joyida = Column(Integer)
+    called = Column(Integer)
+    last_operator_id = Column(Integer)
+    last_izoh = Column(String(111))
+    talk_type = Column(String(255))
+    talk_date = Column(DateTime)
+    last_operator_id2 = Column(Integer)
+    last_izoh2 = Column(String(111))
+    talk_type2 = Column(String(10))
+    talk_date2 = Column(DateTime)
+    izoh2 = Column(String(255))
+    izoh3 = Column(String(255))
+    ombor_user = Column(Integer)
+    haydovchi_satus = Column(Integer)
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+    avans = Column(Integer, default=0)
+    avans_type = Column(String(255))
+
+    operator = relationship('User', back_populates='order')
+    filial = relationship('Filial', back_populates='order')
+    mintaqa = relationship('Mintaqa', back_populates='order')
+    cleans = relationship('Clean', back_populates='order')
+
+
+class Clean(Base):
+    __tablename__ = "clean"
+    id = Column(Integer, primary_key=True)
+    order_id = Column(Integer, ForeignKey("orders.order_id"))
+    clean_filial_id = Column(String(255))
+    costumer_id = Column(Integer, ForeignKey("costumers.id"))
+    sana = Column(DateTime)
+    clean_date = Column(DateTime)
+    qad_date = Column(DateTime)
+    top_sana = Column(DateTime)
+    qayta_sana = Column(DateTime)
+    clean_product = Column(Integer)
+    clean_status = Column(String(255))
+    clean_hajm = Column(Float)
+    gilam_eni = Column(Float)
+    gilam_boyi = Column(Float)
+    clean_narx = Column(Integer)
+    narx = Column(Integer)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    joy = Column(String(100))
+    qad_user = Column(Integer)
+    barcode = Column(String(25))
+    top_user = Column(Integer)
+    reclean_place = Column(Integer)
+    reclean_driver = Column(Integer)
+    joyida_date = Column(DateTime)
+    joyida_user = Column(Integer)
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+
+    user = relationship('User', back_populates='clean')
+    order = relationship('Orders', back_populates='cleans')
+    costumer = relationship('Costumers', back_populates='clean')
+
+
+class Mintaqa(Base):
+    __tablename__ = "mintaqa"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(111))
+    country_id = Column(Integer, ForeignKey("country.id"))
     created_at = Column(TIMESTAMP, default=datetime.now(pytz.timezone('Asia/Tashkent')))
-    updated_at = Column(TIMESTAMP, default='0000-00-00 00:00:00')
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+
+    country = relationship('Country', back_populates='mintaqa')
+    order = relationship('Orders', back_populates='mintaqa')
+
+
+class Country(Base):
+    __tablename__ = "country"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(111))
+    tel_code = Column(Integer)
+    tel_length = Column(Integer)
+    language = Column(String(11))
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+
+    mintaqa = relationship('Mintaqa', back_populates='country')
+
+
+class Mijoz_kirim(Base):
+    __tablename__ = "mijoz_kirim"
+    id = Column(Integer, primary_key=True)
+    summa = Column(Integer, default=0)
+    costumer_id = Column(Integer, ForeignKey("costumers.id"))
+    status = Column(String(255))
+    tolov_turi = Column(String(100))
+    date = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    user_id = Column(Integer, ForeignKey("user.id"))
+    kirim_izoh = Column(String(100))
+    filial_id = Column(Integer, ForeignKey("filial.filial_id"))
+    order_id = Column(Integer, ForeignKey("orders.order_id"))
+    kassachi_id = Column(Integer)
+    user_fullname = Column(String(100))
+    kassachi_fullname = Column(String(100))
+    costumer = Column(String(100))
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+
+    user = relationship('User')
+    order = relationship('Orders')
+

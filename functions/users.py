@@ -4,6 +4,13 @@ from routers.auth import hash_password
 from utils.pagination import pagination
 
 
+def one_user(id, branch_id, db):
+    user = db.query(User).filter(User.id == id)
+    if branch_id is not None:
+        user = user.filter(User.branch_id == branch_id)
+    return user.first()
+
+
 def all_users(search, status, role, page, limit, db):
     users = db.query(User)
     if search:

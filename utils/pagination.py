@@ -36,6 +36,15 @@ def is_datetime_valid(input_datetime_str):
         return False
 
 
+def is_date_valid(input_date_str):
+    try:
+        toshkent_timezone = pytz.timezone('Asia/Tashkent')
+        current_time_toshkent = datetime.now(toshkent_timezone).date()
+        return input_date_str >= current_time_toshkent
+    except ValueError:
+        return False
+
+
 allowed_image_types = ["image/png", "image/jpg", "image/jpeg"]
 allowed_video_types = ["video/mp4", "video/avi"]
 allowed_audio_types = ["audio/mp3", "audio/wav"]  # Audio fayllar

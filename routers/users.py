@@ -34,5 +34,4 @@ async def user_update(form: UserUpdate, db: Session = Depends(get_db)):
 
 @router_user.get("/current_active")
 async def get_current_active_user(current_user: UserCurrent = Depends(current_active_user)):
-    role_verification(current_user, inspect.currentframe().f_code.co_name)
     return current_user
