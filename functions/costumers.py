@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import joinedload, load_only
 
-from models.models import Costumers, Mijoz_kirim
+from models.models import Costumers, Mijoz_kirim, Nasiya
 from routers.auth import hash_password
 from utils.pagination import pagination
 
@@ -28,6 +28,17 @@ def history_costumer(search, page, limit, costumer_id, db):
             Mijoz_kirim.costumer_id.like(search_formatted) | Mijoz_kirim.order_id.like(search_formatted) |
             Mijoz_kirim.user_id.like(search_formatted) | Mijoz_kirim.kassachi_id.like(search_formatted))
     return pagination(history, page, limit)
+
+
+def nasiyalar(search, page, limit, costumer_id, db):
+    nasiyalar = db.query(Nasiya).filter(Nasiya.nasiyachi_id == costumer_id).options(
+        load_only("summa", "nasiya", "ber_date"), joinedload("order").options(load_only("nomer")))
+    if search:
+        search_formatted = "%{}%".format(search)
+        nasiyalar = nasiyalar.filter(
+            Nasiya.nasiyachi_id.like(search_formatted) | Nasiya.order_id.like(search_formatted) |
+            Nasiya.user_id.like(search_formatted) | Nasiya.filial_id.like(search_formatted))
+    return pagination(nasiyalar, page, limit)
 
 
 def create_costumer(form, user_id, db):

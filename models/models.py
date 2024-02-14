@@ -248,3 +248,76 @@ class Mijoz_kirim(Base):
     user = relationship('User')
     order = relationship('Orders')
 
+
+class Nasiya(Base):
+    __tablename__ = "nasiya"
+    id = Column(Integer, primary_key=True)
+    summa = Column(Integer, default=0)
+    nasiyachi_id = Column(Integer, ForeignKey("costumers.id"))
+    ber_date = Column(Date, default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    filial_id = Column(Integer, ForeignKey("filial.filial_id"))
+    status = Column(String(255))
+    nasiya = Column(Integer)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    date = Column(Date)
+    order_id = Column(Integer, ForeignKey("orders.order_id"))
+    izoh = Column(String(111))
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+
+    order = relationship('Orders')
+
+
+class Recall(Base):
+    __tablename__ = "recall"
+    recall_id = Column(Integer, primary_key=True)
+    recall_filial_id = Column(Integer, ForeignKey("filial.filial_id"))
+    recall_costumer_phone = Column(String(255))
+    recall_date = Column(Date)
+    recall_time = Column(TIMESTAMP)
+    recall_status = Column(String(255))
+    izoh = Column(String(255))
+    user_id = Column(Integer, ForeignKey("user.id"))
+    operator_id = Column(Integer)
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+
+
+class Xizmatlar(Base):
+    __tablename__ = "xizmatlar"
+    xizmat_id = Column(Integer, primary_key=True)
+    xizmat_turi = Column(String(255))
+    status = Column(String(115))
+    filial_id = Column(Integer, ForeignKey("filial.filial_id"))
+    olchov = Column(String(255))
+    narx = Column(Integer, default=0)
+    min_narx = Column(Integer, default=0)
+    saygak_narx = Column(Integer, default=0)
+    discount_for_own = Column(Integer)
+    operator_kpi_line = Column(Integer)
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+
+
+class Kpi_hisob(Base):
+    __tablename__ = "kpi_hisob"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    summa = Column(Integer, default=0)
+    filial_id = Column(Integer, ForeignKey("filial.filial_id"))
+    date = Column(DateTime, default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    order_id = Column(Integer, ForeignKey("orders.order_od"))
+    clean_id = Column(Integer, ForeignKey("clean.id"))
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+
+
+class Chegirma(Base):
+    __tablename__ = "chegirma"
+    id = Column(Integer, primary_key=True)
+    order_id = Column(Integer, ForeignKey("orders.order_id"))
+    xizmat_id = Column(Integer, ForeignKey("xizmatlar.xizmat_id"))
+    summa = Column(Float, default=0)
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+

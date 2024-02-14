@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from db import get_db
 from sqlalchemy.orm import Session
 from models.models import Costumers
-from functions.costumers import all_costumers, update_costumer, create_costumer, history_costumer
+from functions.costumers import all_costumers, update_costumer, create_costumer, history_costumer, nasiyalar
 from routers.auth import current_active_user
 from schemas.costumers import CostumerCreate, CostumerUpdate
 from schemas.users import UserCurrent
@@ -38,3 +38,9 @@ async def costumer_update(form: CostumerUpdate, db: Session = Depends(get_db)):
 async def money_from_costumer(search: str = None, costumer_id: int = ..., page: int = 1,
                               limit: int = 25, db: Session = Depends(get_db)):
     return history_costumer(search, page, limit, costumer_id, db)
+
+
+@router_costumer.get('/nasiyalar', status_code=200)
+async def money_from_costumer(search: str = None, nasiyachi_id: int = ..., page: int = 1,
+                              limit: int = 25, db: Session = Depends(get_db)):
+    return nasiyalar(search, page, limit, nasiyachi_id, db)
