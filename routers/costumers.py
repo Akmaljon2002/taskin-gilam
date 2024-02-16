@@ -16,7 +16,7 @@ router_costumer = APIRouter()
 async def add_costumer(form: CostumerCreate,
                        db: Session = Depends(get_db), current_user: UserCurrent = Depends(current_active_user)):
     role_verification(current_user, inspect.currentframe().f_code.co_name)
-    if create_costumer(form, current_user.id, db):
+    if create_costumer(form, current_user.id, current_user.filial_id, db):
         raise HTTPException(status_code=201, detail="Created successfully!")
 
 

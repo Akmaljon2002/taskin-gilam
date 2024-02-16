@@ -1,9 +1,11 @@
+import pytz
 from fastapi import HTTPException
 from sqlalchemy.orm import joinedload, load_only
-
-from models.models import Costumers, Mijoz_kirim, Nasiya
+from datetime import datetime
+from models.models import Costumers, Mijoz_kirim, Nasiya, Recall, Orders, Xizmatlar, Chegirma
 from routers.auth import hash_password
-from utils.pagination import pagination
+from utils.orders import order_nomer
+from utils.pagination import pagination, save_in_db
 
 
 def all_costumers(search, page, limit, db):
@@ -41,8 +43,9 @@ def nasiyalar(search, page, limit, costumer_id, db):
     return pagination(nasiyalar, page, limit)
 
 
-def create_costumer(form, user_id, db):
+def create_costumer(form, user_id, filial_id, db):
     new_costumer = Costumers(
+        costumers_filial_id=filial_id,
         costumer_name=form.costumer_name,
         costumer_phone_1=form.costumer_phone_1,
         costumer_phone_2=form.costumer_phone_2,
@@ -52,17 +55,61 @@ def create_costumer(form, user_id, db):
         user_id=user_id,
         costumer_turi=form.costumer_turi,
         izoh=form.izoh,
-        millat_id=form.millat_id
+        millat_id=form.millat_id,
+        created_at=datetime.now(pytz.timezone('Asia/Tashkent')),
+        updated_at="0000-00-00 00:00:00"
 
     )
-    db.add(new_costumer)
+    save_in_db(db, new_costumer)
+    if form.recall:
+        new_recall = Recall(
+            recall_filial_id=new_costumer.costumers_filial_id,
+            recall_costumer_phone=form.costumer_phone_1,
+            recall_date=form.recall.recall_date,
+            recall_time=form.recall.recall_time,
+            recall_status="on",
+            izoh=form.recall.izoh,
+            user_id=user_id,
+            operator_id=user_id,
+            created_at=datetime.now(pytz.timezone('Asia/Tashkent')),
+            updated_at="0000-00-00 00:00:00",
+        )
+        db.add(new_recall)
+
+    if form.buyurtma:
+        nomer = order_nomer(db)
+        new_order = Orders(
+            costumer_id=new_costumer.id,
+            nomer=nomer,
+            operator_id=user_id,
+            order_filial_id=filial_id,
+            order_date=datetime.now(pytz.timezone('Asia/Tashkent')),
+            olibk_sana="0000-00-00 00:00:00",
+            izoh=form.buyurtma_olish.izoh,
+            order_driver=form.buyurtma_olish.order_driver,
+            order_skidka_foiz=form.buyurtma_olish.order_skidka_foiz,
+            order_skidka_sum=form.buyurtma_olish.order_skidka_sum,
+            created_at=datetime.now(pytz.timezone('Asia/Tashkent')),
+            updated_at="0000-00-00 00:00:00",
+        )
+        save_in_db(db, new_order)
+        for x_item in form.buyurtma_olish.xizmat:
+            if 0 < x_item.chegirma_summa < x_item.summa:
+                new_chegirma = Chegirma(
+                    order_id=new_order.order_id,
+                    xizmat_id=x_item.id,
+                    summa=x_item.summa-x_item.chegirma_summa,
+                    created_at=datetime.now(pytz.timezone('Asia/Tashkent')),
+                    updated_at="0000-00-00 00:00:00"
+                )
+                db.add(new_chegirma)
+
     db.commit()
-    db.refresh(new_costumer)
-    return new_costumer
+    return True
 
 
 async def update_costumer(form, db):
-    costumer = db.query(Costumers).filter_by(id=form.costumer_id, is_active=True)
+    costumer = db.query(Costumers).filter_by(id=form.id)
     if costumer.first() is None:
         raise HTTPException(status_code=404, detail="Costumer not found!")
 

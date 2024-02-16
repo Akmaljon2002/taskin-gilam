@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from models.models import User
 from routers.auth import hash_password
-from utils.pagination import pagination
+from utils.pagination import pagination, save_in_db
 
 
 def one_user(id, branch_id, db):
@@ -36,9 +36,7 @@ async def create_user(form, db):
         is_active=form.is_active,
 
     )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    save_in_db(db, new_user)
     return new_user
 
 

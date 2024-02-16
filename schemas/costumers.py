@@ -2,20 +2,30 @@ from typing import Optional, List
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from db import SessionLocal
-from pydantic.schema import date
+from pydantic.schema import date, time
+from schemas.orders import OrderCreate
 
 db: Session = SessionLocal()
+
+
+class QaytaQongiroq(BaseModel):
+    recall_date: date = None
+    recall_time: time = None
+    izoh: Optional[str] = None
 
 
 class CostumerCreate(BaseModel):
     costumer_name: str
     costumer_phone_1: str
-    costumer_phone_2: str
+    costumer_phone_2: Optional[str] = None
     costumer_addres: str
-    manba: str
+    manba: Optional[str] = None
     costumer_turi: str
-    izoh: str
+    izoh: Optional[str] = None
     millat_id: str
+    recall: Optional[QaytaQongiroq] = None
+    buyurtma: bool = False
+    buyurtma_olish: Optional[OrderCreate] = None
 
 
 class CostumerUpdate(BaseModel):

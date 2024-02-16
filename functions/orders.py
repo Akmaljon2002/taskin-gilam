@@ -1,10 +1,6 @@
-from datetime import datetime
-import pytz
-from fastapi import HTTPException
 from sqlalchemy.orm import joinedload, defer, load_only
-from functions.users import one_user
 from models.models import Orders
-from utils.pagination import pagination, save_in_db, is_date_valid
+from utils.pagination import pagination
 
 
 def all_orders(search, page, limit, db):
@@ -23,3 +19,4 @@ def all_orders(search, page, limit, db):
 def one_order(id, db):
     return db.query(Orders).filter(Orders.order_id == id).options(joinedload("operator").options(
         defer("password_hash"), defer("auth_key"), defer("username")), joinedload("filial"), joinedload("mintaqa")).first()
+
