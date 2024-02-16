@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -14,13 +15,20 @@ class QaytaQongiroq(BaseModel):
     izoh: Optional[str] = None
 
 
+class Costumer_turi(Enum):
+    narx = "Narx"
+    sifat = "Sifat"
+    premium = "Premium"
+    qora_royxat = "Qora ro`yxat"
+
+
 class CostumerCreate(BaseModel):
     costumer_name: str
     costumer_phone_1: str
     costumer_phone_2: Optional[str] = None
     costumer_addres: str
     manba: Optional[str] = None
-    costumer_turi: str
+    costumer_turi: Optional[Costumer_turi]
     izoh: Optional[str] = None
     millat_id: str
     recall: Optional[QaytaQongiroq] = None

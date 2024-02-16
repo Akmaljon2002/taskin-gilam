@@ -3,7 +3,6 @@ from fastapi import HTTPException
 from sqlalchemy.orm import joinedload, load_only
 from datetime import datetime
 from models.models import Costumers, Mijoz_kirim, Nasiya, Recall, Orders, Xizmatlar, Chegirma
-from routers.auth import hash_password
 from utils.orders import order_nomer
 from utils.pagination import pagination, save_in_db
 
@@ -44,10 +43,15 @@ def nasiyalar(search, page, limit, costumer_id, db):
 
 
 def create_costumer(form, user_id, filial_id, db):
+    phone_val = db.query(Costumers).filter(Costumers.costumer_phone_1 == f"+998{form.costumer_phone_1}").first()
+    if phone_val:
+        raise HTTPException(status_code=400, detail="Bunda telefon nomer oldin royhatdan o'tkazilgan!")
+    if form.costumer_phone_2:
+        form.costumer_phone_2 = f"+998{form.costumer_phone_2}"
     new_costumer = Costumers(
         costumers_filial_id=filial_id,
         costumer_name=form.costumer_name,
-        costumer_phone_1=form.costumer_phone_1,
+        costumer_phone_1=f"+998{form.costumer_phone_1}",
         costumer_phone_2=form.costumer_phone_2,
         costumer_addres=form.costumer_addres,
         manba=form.manba,
@@ -92,6 +96,7 @@ def create_costumer(form, user_id, filial_id, db):
             created_at=datetime.now(pytz.timezone('Asia/Tashkent')),
             updated_at="0000-00-00 00:00:00",
         )
+        new_costumer.costumer_status = "keltirish"
         save_in_db(db, new_order)
         for x_item in form.buyurtma_olish.xizmat:
             if 0 < x_item.chegirma_summa < x_item.summa:
