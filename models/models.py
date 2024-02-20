@@ -1,7 +1,6 @@
 import pytz
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, TIMESTAMP, ForeignKey, Date, Float, func
-from sqlalchemy.orm import relationship
-
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, TIMESTAMP, ForeignKey, Date, Float, func, and_
+from sqlalchemy.orm import relationship, backref
 from db import Base
 from datetime import datetime
 
@@ -63,7 +62,7 @@ class Costumers(Base):
     token = Column(String(100), default=0)
     parol = Column(String(100), default=0)
     user_id = Column(Integer, ForeignKey("user.id"))
-    millat_id = Column(Integer, default=0)
+    millat_id = Column(Integer, ForeignKey("millat.id"), default=0)
     call_count = Column(Integer, default=0)
     calling = Column(Boolean, default=False)
     izoh = Column(String(255), default='')
@@ -72,6 +71,8 @@ class Costumers(Base):
 
     user = relationship('User', back_populates='costumer')
     clean = relationship('Clean', back_populates='costumer')
+    order = relationship('Orders', back_populates='costumer')
+    millat = relationship('Millat', back_populates='costumer')
 
 
 class Filial(Base):
@@ -164,6 +165,9 @@ class Orders(Base):
     filial = relationship('Filial', back_populates='order')
     mintaqa = relationship('Mintaqa', back_populates='order')
     cleans = relationship('Clean', back_populates='order')
+    costumer = relationship('Costumers', back_populates='order')
+
+    driver = relationship('User', foreign_keys=[order_driver], primaryjoin=lambda: and_(User.id == Orders.order_driver))
 
 
 class Clean(Base):
@@ -199,6 +203,7 @@ class Clean(Base):
     user = relationship('User', back_populates='clean')
     order = relationship('Orders', back_populates='cleans')
     costumer = relationship('Costumers', back_populates='clean')
+    driver = relationship('User', foreign_keys=[reclean_driver], primaryjoin=lambda: and_(User.id == Clean.reclean_driver))
 
 
 class Mintaqa(Base):
@@ -320,4 +325,15 @@ class Chegirma(Base):
     summa = Column(Float, default=0)
     created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
     updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+
+
+class Millat(Base):
+    __tablename__ = "millat"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(20))
+    filial_id = Column(Integer, ForeignKey("filial.filial_id"))
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+
+    costumer = relationship('Costumers', back_populates='millat')
 
