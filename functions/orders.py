@@ -1,8 +1,5 @@
-from math import ceil
 from sqlalchemy import or_
 from sqlalchemy.orm import joinedload, defer, load_only
-from sqlalchemy.sql import label
-
 from models.models import Orders, Clean
 from utils.pagination import pagination
 
@@ -61,7 +58,7 @@ def recleans(search, page, limit, user_id, db):
         search_formatted = "%{}%".format(search)
         cleans = cleans.filter(
             Orders.nomer.like(search_formatted) | Orders.saygak_id.like(search_formatted))
-    cleans = cleans.group_by("order_id", "reclean_driver")
+    # cleans = cleans.group_by("order_id", "reclean_driver")
     return pagination(cleans, page, limit)
 
 
