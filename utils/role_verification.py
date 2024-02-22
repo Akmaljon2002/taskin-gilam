@@ -7,6 +7,8 @@ def role_verification(user, function):
 
     if user.role == "admin":
         return True
+    elif user.role == "admin_filial":
+        return True
     elif function in allowed_functions_for_driver:
         return True
 

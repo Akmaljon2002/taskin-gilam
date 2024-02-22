@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Optional, List
 from pydantic import BaseModel, Field
 
@@ -19,3 +20,8 @@ class OrderCreate(BaseModel):
     order_skidka_foiz: int = Field(ge=0)
     order_skidka_sum: int = Field(ge=0)
     xizmat: List[XizmatChegirma]
+
+
+class Order_status(Enum):
+    keltirish = "keltirish"
+    qabul_qilindi = "qabul qilindi"

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from db import Base, engine
-from routers import auth, users, costumers, branches, orders
+from routers import auth, users, costumers, branches, orders, transport
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -56,4 +56,11 @@ app.include_router(
     orders.router_order,
     prefix='/orders',
     tags=['Orders section'],
+)
+
+
+app.include_router(
+    transport.router_transport,
+    prefix='/transport',
+    tags=['Transport section'],
 )
