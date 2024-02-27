@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import Optional, List
 from pydantic import BaseModel, Field
+from pydantic.schema import date
+from schemas.xizmatlar import XizmatlarBuyurtma
 
 
 class OrdersSchema(BaseModel):
@@ -25,3 +27,18 @@ class OrderCreate(BaseModel):
 class Order_status(Enum):
     keltirish = "keltirish"
     qabul_qilindi = "qabul qilindi"
+
+
+class Order_accept(BaseModel):
+    order_id: int
+    topshir_sana: date = Field(...)
+    brak: str = ""
+    dog: str = ""
+    izoh2: str = ""
+    own: bool = False
+    xizmatlar: List[XizmatlarBuyurtma]
+
+
+class CancelOrder(BaseModel):
+    order_id: int
+    izoh: str

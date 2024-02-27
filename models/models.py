@@ -337,3 +337,17 @@ class Millat(Base):
 
     costumer = relationship('Costumers', back_populates='millat')
 
+
+class Buyurtma(Base):
+    __tablename__ = "buyurtma"
+    id = Column(Integer, primary_key=True)
+    x_id = Column(Integer)
+    order_id = Column(Integer, ForeignKey("orders.order_id"))
+    filial_id = Column(Integer, ForeignKey("filial.filial_id"))
+    value = Column(Float)
+    status = Column(Integer)
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+
+
+

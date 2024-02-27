@@ -1,6 +1,9 @@
+from datetime import datetime
+import pytz
+from fastapi import HTTPException
 from sqlalchemy import or_, desc
 from sqlalchemy.orm import joinedload, defer, load_only
-from models.models import Orders, Clean
+from models.models import Orders, Clean, Costumers, Buyurtma
 from utils.pagination import pagination
 
 
@@ -75,3 +78,71 @@ def reclean(clean_id, db):
                                                              defer("api_token")),
         joinedload("driver"), joinedload("costumer").subqueryload("millat").options(load_only("name"))).first()
     return clean
+
+
+def accept_order(form, user_id, filial_id, db):
+    order = db.query(Orders).filter(Orders.order_id == form.order_id, Orders.order_filial_id == filial_id,
+                                    Orders.order_status == "keltirish").first()
+    if not order:
+        raise HTTPException(status_code=400, detail="Order topilmadi yoki qabul qilingan!")
+    costumer = db.query(Costumers).filter(Costumers.id == order.costumer_id).first()
+
+    order.order_driver = user_id
+    order.finish_driver = 0
+    order.order_price = 0
+    order.order_last_price = 0
+    order.tartib_raqam = 0
+    order.order_price_status = "yoq"
+    order.order_status = "qabul qilindi"
+    order.olibk_sana = form.topshir_sana
+
+    if len(form.xizmatlar) == 0:
+        raise HTTPException(status_code=400, detail="Bitta bo`lsa ham mahsulot kiriting!")
+    for xizmat in form.xizmatlar:
+        if xizmat.quantity > 0:
+            buyurtma = Buyurtma(
+                x_id=xizmat.xizmat_id,
+                status=1,
+                value=xizmat.quantity,
+                filial_id=filial_id,
+                order_id=form.order_id,
+                created_at=datetime.now(pytz.timezone('Asia/Tashkent')),
+                updated_at="0000-00-00 00:00:00"
+            )
+            db.add(buyurtma)
+    costumer.costumers_filial_id = filial_id
+    costumer.costumer_status = "kutish"
+    db.commit()
+    return True
+
+
+def edit_order_driver(order_id, driver_id, filial_id, db):
+    order = db.query(Orders).filter(Orders.order_id == order_id, Orders.order_filial_id == filial_id).first()
+    if not order:
+        raise HTTPException(status_code=400, detail="Order topilmadi!")
+    if driver_id == 0:
+        driver_id = "hamma"
+    order.order_driver = driver_id
+    db.commit()
+    return True
+
+
+def cancel_order(form, filial_id, db):
+    order = db.query(Orders).filter(Orders.order_id == form.order_id, Orders.order_filial_id == filial_id).first()
+    costumer = db.query(Costumers).filter(Costumers.id == order.costumer_id).first()
+    if not order:
+        raise HTTPException(status_code=400, detail="Order topilmadi!")
+    order.order_status = "bekor qilindi"
+    order.izoh = form.izoh
+    costumer.costumer_status = "kutish"
+    db.commit()
+    return True
+
+
+def called_order(order_id, filial_id, db):
+    order = db.query(Orders).filter(Orders.order_id == order_id, Orders.order_filial_id == filial_id).first()
+    if not order:
+        raise HTTPException(status_code=400, detail="Order topilmadi!")
+    order.called = 1
+    db.commit()
+    return True

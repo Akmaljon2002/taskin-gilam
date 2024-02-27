@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from db import Base, engine
-from routers import auth, users, costumers, branches, orders, transport
+from routers import auth, users, costumers, branches, orders, transport, xizmatlar
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -33,7 +33,6 @@ app.include_router(
 
 )
 
-
 app.include_router(
     users.router_user,
     prefix='/user',
@@ -58,9 +57,14 @@ app.include_router(
     tags=['Orders section'],
 )
 
-
 app.include_router(
     transport.router_transport,
     prefix='/transport',
     tags=['Transport section'],
+)
+
+app.include_router(
+    xizmatlar.router_xizmat,
+    prefix='/xizmatlar',
+    tags=['Xizmatlar section'],
 )
