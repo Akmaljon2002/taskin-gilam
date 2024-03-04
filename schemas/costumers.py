@@ -1,9 +1,9 @@
+from datetime import date, time
 from enum import Enum
-from typing import Optional, List
+from typing import Optional
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from db import SessionLocal
-from pydantic.schema import date, time
 from schemas.orders import OrderCreate
 
 db: Session = SessionLocal()
@@ -72,3 +72,4 @@ class PaginationResponse(BaseModel):
     limit: int
     pages: int
     data: Optional[Mijoz_kirim_chiqim] = None
+

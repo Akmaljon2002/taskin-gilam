@@ -1,7 +1,9 @@
 from math import ceil
 from datetime import datetime
+from typing import TypeVar, Generic, List
 import pytz
 from fastapi import HTTPException
+from pydantic.generics import GenericModel
 
 
 def pagination(form, page, limit):
@@ -55,3 +57,17 @@ allowed_other_types = ["application/octet-stream"]  # Boshqa fayl formatlari
 
 allowed_address_source = ["customers"]
 allowed_phones_source = ["customers", "user", "market"]
+
+
+DataType = TypeVar("DataType")
+
+
+class PaginationResponseModel(GenericModel, Generic[DataType]):
+    current_page: int
+    limit: int
+    pages: int
+    data: List[DataType] = None
+
+    class Config:
+        orm_mode = True
+

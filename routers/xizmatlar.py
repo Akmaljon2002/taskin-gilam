@@ -6,6 +6,7 @@ from functions.xizmatlar import *
 from routers.auth import current_active_user
 from schemas.xizmatlar import *
 from schemas.users import UserCurrent
+from utils.pagination import PaginationResponseModel
 from utils.role_verification import role_verification
 
 router_xizmat = APIRouter()
@@ -22,7 +23,8 @@ router_xizmat = APIRouter()
 
 @router_xizmat.get('/', status_code=200)
 async def get_xizmatlar(search: str = None, id: int = 0, page: int = 1, limit: int = 25,
-                        db: Session = Depends(get_db), current_user: UserCurrent = Depends(current_active_user)):
+                        db: Session = Depends(get_db), current_user: UserCurrent = Depends(current_active_user)) -> \
+        PaginationResponseModel[XizmatlarResponceModel] | XizmatlarResponceModel:
     role_verification(current_user, inspect.currentframe().f_code.co_name)
     if id:
         return one_xizmat(id, current_user.filial_id, db)

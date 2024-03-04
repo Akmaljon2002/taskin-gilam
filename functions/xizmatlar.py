@@ -1,8 +1,11 @@
 from datetime import datetime
 import pytz
 from fastapi import HTTPException
+from starlette import status
+
 from functions.users import one_user
 from models.models import Xizmatlar
+from schemas.xizmatlar import XizmatStatus
 from utils.pagination import pagination, save_in_db, is_date_valid
 
 
@@ -19,6 +22,19 @@ def all_xizmatlar(search, page, limit, filial_id, db):
 def one_xizmat(id, filial_id, db):
     return db.query(Xizmatlar).filter(Xizmatlar.xizmat_id == id,
                                       Xizmatlar.filial_id == filial_id, Xizmatlar.status == "active").first()
+
+
+def select_xizmat_firsrt(db, id: int, filial_id: int):
+    data = db.query(Xizmatlar).filter(
+        Xizmatlar.xizmat_id == id,
+        Xizmatlar.filial_id == filial_id,
+        Xizmatlar.status == XizmatStatus.ACTIVE.value
+    ).first()
+
+    if data is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bu id bo'yicha ma'lumot topilmadi")
+
+    return data
 
 
 # def create_xizmat(form, user_id, db):

@@ -1,6 +1,6 @@
 import pytz
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, TIMESTAMP, ForeignKey, Date, Float, func, and_
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Date, Float, func, and_
+from sqlalchemy.orm import relationship
 from db import Base
 from datetime import datetime
 
@@ -39,6 +39,10 @@ class User(Base):
     order = relationship('Orders', back_populates='operator')
     clean = relationship('Clean', back_populates='user')
 
+    def __repr__(self):
+        return "<User(id='{}', fullname='{}', username='{}')>".format(
+            self.id, self.fullname, self.username)
+
 
 class Costumers(Base):
     __tablename__ = "costumers"
@@ -73,6 +77,10 @@ class Costumers(Base):
     clean = relationship('Clean', back_populates='costumer')
     order = relationship('Orders', back_populates='costumer')
     millat = relationship('Millat', back_populates='costumer')
+
+    def __repr__(self):
+        return "<Costumer (id='{}', costumers_filial_id='{}', costumer_phone_1='{}')>".format(
+            self.id, self.costumers_filial_id, self.costumer_phone_1)
 
 
 class Filial(Base):
@@ -110,6 +118,10 @@ class Filial(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
 
     order = relationship('Orders', back_populates='filial')
+
+    def __repr__(self):
+        return "<Kpi hisob (id='{}', xizmat_id='{}', summa='{}')>".format(
+            self.id, self.xizmat_id, self.summa)
 
 
 class Orders(Base):
@@ -169,6 +181,10 @@ class Orders(Base):
 
     driver = relationship('User', foreign_keys=[order_driver], primaryjoin=lambda: and_(User.id == Orders.order_driver))
 
+    def __repr__(self):
+        return "<Clean (id='{}', order_id='{}', clean_status='{}')>".format(
+            self.id, self.order_id, self.clean_status)
+
 
 class Clean(Base):
     __tablename__ = "clean"
@@ -176,34 +192,39 @@ class Clean(Base):
     order_id = Column(Integer, ForeignKey("orders.order_id"))
     clean_filial_id = Column(String(255))
     costumer_id = Column(Integer, ForeignKey("costumers.id"))
-    sana = Column(DateTime)
-    clean_date = Column(DateTime)
-    qad_date = Column(DateTime)
-    top_sana = Column(DateTime)
-    qayta_sana = Column(DateTime)
-    clean_product = Column(Integer)
+    sana = Column(DateTime, default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    clean_date = Column(DateTime, default='0000-00-00 00:00:00')
+    qad_date = Column(DateTime, default='0000-00-00 00:00:00')
+    top_sana = Column(DateTime, default='0000-00-00 00:00:00')
+    qayta_sana = Column(DateTime, default='0000-00-00 00:00:00')
+    clean_product = Column(Integer, ForeignKey('xizmatlar.xizmat_id'))
     clean_status = Column(String(255))
     clean_hajm = Column(Float)
-    gilam_eni = Column(Float)
-    gilam_boyi = Column(Float)
+    gilam_eni = Column(Float, default=0)
+    gilam_boyi = Column(Float, default=0)
     clean_narx = Column(Integer)
     narx = Column(Integer)
     user_id = Column(Integer, ForeignKey("user.id"))
-    joy = Column(String(100))
-    qad_user = Column(Integer)
+    joy = Column(String(100), default='')
+    qad_user = Column(Integer, default=0)
     barcode = Column(String(25))
-    top_user = Column(Integer)
-    reclean_place = Column(Integer)
-    reclean_driver = Column(Integer)
-    joyida_date = Column(DateTime)
-    joyida_user = Column(Integer)
-    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
-    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+    top_user = Column(Integer, default=0)
+    reclean_place = Column(Integer, default=0)
+    reclean_driver = Column(Integer, default=0)
+    joyida_date = Column(DateTime, default='0000-00-00 00:00:00')
+    joyida_user = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime, onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
 
     user = relationship('User', back_populates='clean')
+    xizmat = relationship('Xizmatlar', back_populates='cleans')
     order = relationship('Orders', back_populates='cleans')
     costumer = relationship('Costumers', back_populates='clean')
     driver = relationship('User', foreign_keys=[reclean_driver], primaryjoin=lambda: and_(User.id == Clean.reclean_driver))
+
+    def __repr__(self):
+        return "<Clean (id='{}', order_id='{}', clean_status='{}')>".format(
+            self.id, self.order_id, self.clean_status)
 
 
 class Mintaqa(Base):
@@ -211,7 +232,7 @@ class Mintaqa(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(111))
     country_id = Column(Integer, ForeignKey("country.id"))
-    created_at = Column(TIMESTAMP, default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    created_at = Column(DateTime, default=datetime.now(pytz.timezone('Asia/Tashkent')))
     updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
 
     country = relationship('Country', back_populates='mintaqa')
@@ -279,7 +300,7 @@ class Recall(Base):
     recall_filial_id = Column(Integer, ForeignKey("filial.filial_id"))
     recall_costumer_phone = Column(String(255))
     recall_date = Column(Date)
-    recall_time = Column(TIMESTAMP)
+    recall_time = Column(DateTime)
     recall_status = Column(String(255))
     izoh = Column(String(255))
     user_id = Column(Integer, ForeignKey("user.id"))
@@ -302,6 +323,12 @@ class Xizmatlar(Base):
     operator_kpi_line = Column(Integer)
     created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
     updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+
+    cleans = relationship('Clean', back_populates='xizmat')
+
+    def __repr__(self):
+        return "<Xizmat (xizmat_id='{}', xizmat_turi='{}', status='{}')>".format(
+            self.xizmat_id, self.xizmat_turi, self.status)
 
 
 class Kpi_hisob(Base):

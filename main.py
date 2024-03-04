@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from db import Base, engine
-from routers import auth, users, costumers, branches, orders, transport, xizmatlar
+from routers import auth, users, costumers, branches, orders, transport, xizmatlar, washing
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -67,4 +67,10 @@ app.include_router(
     xizmatlar.router_xizmat,
     prefix='/xizmatlar',
     tags=['Xizmatlar section'],
+)
+
+app.include_router(
+    washing.router_washing,
+    prefix='/washing',
+    tags=['Washing section'],
 )

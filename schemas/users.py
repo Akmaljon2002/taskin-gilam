@@ -1,5 +1,7 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Generic, TypeVar, Any
+
+from pydantic.generics import GenericModel
 from sqlalchemy.orm import Session
 from db import SessionLocal
 
@@ -32,9 +34,9 @@ class UserUpdate(BaseModel):
     maosh: int
 
 
-class Token(BaseModel):
-    access_token = str
-    token = str
+# class Token(BaseModel):
+#     access_token = str
+#     token = str
 
 
 class TokenData(BaseModel):
@@ -44,6 +46,6 @@ class TokenData(BaseModel):
 class UserCurrent(BaseModel):
     id: int
     username: str
-    password: str
+    password_hash: str
     role: str
-    is_active: bool
+

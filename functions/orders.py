@@ -3,6 +3,7 @@ import pytz
 from fastapi import HTTPException
 from sqlalchemy import or_, desc
 from sqlalchemy.orm import joinedload, defer, load_only
+from starlette import status
 from models.models import Orders, Clean, Costumers, Buyurtma
 from utils.pagination import pagination
 
@@ -146,3 +147,42 @@ def called_order(order_id, filial_id, db):
     order.called = 1
     db.commit()
     return True
+
+
+def update_order(db, id: int, data: dict):
+    order = db.query(Orders).filter(Orders.order_id == id).update(data)
+    db.commit()
+    return order
+
+
+def order_get(page, limit, db, filial_id: int, status: list = None):
+    """
+    Barcha buyurtmalarni chaqirib olamiz user filiali bo'yicha va status bo'yicha
+    """
+    orders = db.query(Orders).options(joinedload(Orders.costumer)).order_by(desc(Orders.topshir_sana))
+    if not status:
+        orders = orders.filter(
+            Orders.order_filial_id == filial_id,
+        )
+    else:
+        orders = orders.join(Clean).filter(
+            Clean.clean_status.in_(status)
+        )
+    return pagination(orders, page, limit)
+
+
+def order_first(db, id: int, filial_id: int, joinload: bool = True, operator_old: bool = False):
+    order = db.query(Orders).filter(Orders.order_id == id, Orders.order_filial_id == filial_id)
+    if joinload:
+        # Shunga qilishiga to'g'ri keldi. Bundan ham yaxshi yechilar bor albatta
+        if operator_old:
+            order = order.options(joinedload(Orders.operator_oldi), joinedload(Orders.costumer))
+        else:
+            order = order.options(joinedload(Orders.costumer))
+
+    order = order.first()
+
+    if order is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bu id bo'yicha ma'lumot topilmadi")
+
+    return order
