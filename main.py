@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from db import Base, engine
-from routers import auth, users, costumers, branches, orders, transport, xizmatlar, washing
+from routers import auth, users, costumers, branches, orders, transport, xizmatlar, washing, qadoqlash
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -73,4 +73,10 @@ app.include_router(
     washing.router_washing,
     prefix='/washing',
     tags=['Washing section'],
+)
+
+app.include_router(
+    qadoqlash.router_qadoqlash,
+    prefix='/qadoqlash',
+    tags=['Qadoqlash section'],
 )

@@ -99,3 +99,10 @@ class CleanResponse2(CleanResponse):
             self.options = Options()
 
         return self
+
+
+class CleanResponse3(CleanResponse):
+    xizmat: Xizmat = None
+
+    class Config:
+        from_attributes = True

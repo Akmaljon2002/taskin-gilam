@@ -14,7 +14,7 @@ from routers.auth import current_active_user
 from schemas.orders import OrderYuvishGetResponse, OrderYuvishResponse
 from schemas.users import UserCurrent
 from schemas.washing import Yuvilmaganlar_yuvilganlar_qadoqlanganlarResponse, CleanStatus, YuvishAndQaytaYuvish
-from schemas.xizmatlar import XizmatCleanCountResponse, XizmatYuvishPost, XizmatYuvishPut
+from schemas.xizmatlar import XizmatCleanCountResponse, XizmatYuvishPost, XizmatYuvishPut, XizmatQuridiCountResponse
 from utils.pagination import PaginationResponseModel
 from utils.role_verification import role_verification
 from utils.status_path import yuvish_to_qadoqlash
@@ -203,3 +203,23 @@ async def washing_product_put(order_id: int, payload: XizmatYuvishPut, db: Sessi
     if order_update and clean_update:
         data = await yuvish_clean_mahsulot_get(order_id, db, current_user)
         return data
+
+
+@router_washing.get('/product_quridi', summary="Buyurtma maxsulotlarini chaqirish",
+                    status_code=status.HTTP_200_OK)
+async def yuvish_clean_mahsulot_get(order_id: int, db: Session = Depends(get_db),
+                                    current_user: UserCurrent = Depends(current_active_user)) -> \
+        XizmatQuridiCountResponse:
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
+    """
+    ## "order_id"si yuborilgan buyurtmani barcha mahsulotlari (barcha bo'limlardagi) va yuvish kerak bo'lganlari keladi
+    * **xizmat_id** - yuqoridagi **/yuvish** va **/qayta_yuvish** "api"larida kelgan "order_id" yuboriladi
+    """
+
+    quriganlar = clean_with_status(db, order_id, [CleanStatus.QURIDI.value, CleanStatus.QAYTA_QURIDI.value])
+    data = {
+        'mahsulot': quriganlar,
+        'quriganlar': len(quriganlar),
+    }
+
+    return data

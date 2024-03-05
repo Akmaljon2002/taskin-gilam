@@ -3,7 +3,7 @@ from enum import Enum
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from db import SessionLocal
-from schemas.washing import XizmatCleanAllResponse, CleanResponse2, ENI_MAX, BOY_MAX, HAJM_MAX
+from schemas.washing import XizmatCleanAllResponse, CleanResponse2, ENI_MAX, BOY_MAX, HAJM_MAX, CleanResponse3
 
 db: Session = SessionLocal()
 
@@ -40,6 +40,22 @@ class XizmatCleanCountResponse(BaseModel):
     mahsulot_all: list[XizmatCleanAllResponse] = None
     mahsulot: list[CleanResponse2] = None
     yuvilmagan: int
+
+    class Config:
+        from_attributes = True
+
+
+class XizmatQuridiCountResponse(BaseModel):
+    mahsulot: list[CleanResponse3] = None
+    quriganlar: int
+
+    class Config:
+        from_attributes = True
+
+
+class XizmatQadoqlashCountResponse(BaseModel):
+    mahsulot: list[CleanResponse3] = None
+    qadoqlanganlar: int
 
     class Config:
         from_attributes = True
