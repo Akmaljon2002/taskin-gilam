@@ -15,10 +15,10 @@ def qadoqlash(db, filial_id, user_id, clean_id):
     if not order:
         raise HTTPException(status_code=200, detail="Order not found!")
     clean.qad_user = user_id
-    if clean.clean_status == "qayta quridi":
-        clean.clean_status = "qayta qadoqlandi"
+    if clean.clean_status == CleanStatus.QAYTA_QURIDI.value:
+        clean.clean_status = CleanStatus.QAYTA_QADOQLANDI.value
     else:
-        clean.clean_status = "qadoqlandi"
+        clean.clean_status = CleanStatus.QADOQLANDI.value
     clean.qad_date = datetime.now(pytz.timezone('Asia/Tashkent'))
     db.commit()
     cleans = db.query(Clean).filter(
