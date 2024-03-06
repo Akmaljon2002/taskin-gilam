@@ -54,8 +54,8 @@ class XizmatQuridiCountResponse(BaseModel):
 
 
 class XizmatQadoqlashCountResponse(BaseModel):
-    mahsulot: list[CleanResponse3] = None
-    qadoqlanganlar: int
+    qadoqlanganlar: list[CleanResponse3] = None
+    yuvilganlar: list[CleanResponse3] = None
 
     class Config:
         from_attributes = True
