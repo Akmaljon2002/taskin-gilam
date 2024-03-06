@@ -34,11 +34,6 @@ class UserUpdate(BaseModel):
     maosh: int
 
 
-# class Token(BaseModel):
-#     access_token = str
-#     token = str
-
-
 class TokenData(BaseModel):
     id: Optional[str] = None
 

@@ -53,14 +53,6 @@ class XizmatQuridiCountResponse(BaseModel):
         from_attributes = True
 
 
-class XizmatQadoqlashCountResponse(BaseModel):
-    qadoqlanganlar: list[CleanResponse3] = None
-    yuvilganlar: list[CleanResponse3] = None
-
-    class Config:
-        from_attributes = True
-
-
 class XizmatYuvishPost(BaseModel):
     xizmat_id: int = Field(...)
     costumer_id: int = Field(...)

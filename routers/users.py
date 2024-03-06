@@ -1,4 +1,3 @@
-import inspect
 from fastapi import APIRouter, Depends, HTTPException
 from db import get_db
 from sqlalchemy.orm import Session
@@ -6,7 +5,7 @@ from models.models import User
 from functions.users import all_users, update_user, create_user
 from routers.auth import current_active_user
 from schemas.users import UserCreate, UserUpdate, UserCurrent
-from utils.role_verification import role_verification
+
 
 router_user = APIRouter()
 

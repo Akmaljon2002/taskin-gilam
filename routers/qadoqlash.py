@@ -8,9 +8,9 @@ from functions.qadoqlash import qadoqlash
 from functions.washing import clean_with_status
 from routers.auth import current_active_user
 from schemas.orders import OrderYuvishGetResponse
+from schemas.qadoqlash import XizmatQadoqlashCountResponse
 from schemas.users import UserCurrent
 from schemas.washing import CleanStatus
-from schemas.xizmatlar import XizmatQadoqlashCountResponse
 from utils.pagination import PaginationResponseModel
 from utils.role_verification import role_verification
 
