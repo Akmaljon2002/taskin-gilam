@@ -8,7 +8,7 @@ from db import get_db
 from functions.buyurtma import select_buyurtma_first, update_buyurtma_value, insert_buyurtma
 from functions.orders import update_order, order_get, order_first
 from functions.washing import clean_filter_fililal_and_status_count, clean_select_with_xizmat, \
-    clean_with_status, insert_clean, clean_first, update_clean
+    clean_with_status, insert_clean, clean_first, update_clean, rewash
 from functions.xizmatlar import select_xizmat_firsrt
 from routers.auth import current_active_user
 from schemas.orders import OrderYuvishGetResponse, OrderYuvishResponse
@@ -203,4 +203,16 @@ async def washing_product_put(order_id: int, payload: XizmatYuvishPut, db: Sessi
     if order_update and clean_update:
         data = await yuvish_clean_mahsulot_get(order_id, db, current_user)
         return data
+
+
+@router_washing.put('/rewash', status_code=status.HTTP_202_ACCEPTED)
+async def rewash_update(clean_id: int, db: Session = Depends(get_db),
+                        current_user: UserCurrent = Depends(current_active_user)):
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
+    """
+    ## Clean qayta yuvishga ozgartirish
+    """
+
+    rewash(db, clean_id)
+    return "qayta yuvishga olindi"
 

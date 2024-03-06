@@ -3,6 +3,8 @@ import pytz
 from fastapi import HTTPException
 from sqlalchemy.orm import joinedload
 from starlette import status
+
+from functions.orders import one_order
 from models.models import Clean, Xizmatlar
 from utils.barcode import generate_unique_number
 
@@ -63,3 +65,22 @@ def update_clean(db, id: int, data: dict):
     query = db.query(Clean).filter(Clean.id == id).update(data)
     db.commit()
     return query
+
+
+def rewash(db, clean_id):
+    clean = clean_first(db, clean_id)
+    if not clean:
+        raise HTTPException(status_code=400, detail="Clean not found!")
+    clean.qayta_sana = datetime.now(pytz.timezone('Asia/Tashkent'))
+    clean.clean_status = "qayta yuvish"
+    if clean.reclean_place < 3:
+        clean.reclean_place = 1
+    clean.joy = ""
+
+    order = one_order(clean.order_id, db)
+    if not order:
+        raise HTTPException(status_code=200, detail="Order not found!")
+    order.order_status = "qayta yuvish"
+    db.commit()
+    return True
+

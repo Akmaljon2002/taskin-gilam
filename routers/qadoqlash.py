@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from starlette import status
 from db import get_db
 from functions.orders import order_get
+from functions.qadoqlash import qadoqlash
 from functions.washing import clean_with_status
 from routers.auth import current_active_user
 from schemas.orders import OrderYuvishGetResponse
@@ -46,5 +47,16 @@ async def yuvish_clean_mahsulot_get(order_id: int, db: Session = Depends(get_db)
         'qadoqlanganlar': qadoqlanganlar,
         'yuvilganlar': quriganlar
     }
+    return data
 
+
+@router_qadoqlash.put('/update_qadoqlash', status_code=status.HTTP_202_ACCEPTED)
+async def qadoqlash_update(clean_id: int, db: Session = Depends(get_db),
+                           current_user: UserCurrent = Depends(current_active_user)):
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
+    """
+    ## Clean qayta yuvishga ozgartirish
+    """
+
+    data = qadoqlash(db, current_user.filial_id, current_user.id, clean_id)
     return data
