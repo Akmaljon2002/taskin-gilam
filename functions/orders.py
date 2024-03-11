@@ -1,10 +1,12 @@
 from datetime import datetime
+from typing import Union
+
 import pytz
 from fastapi import HTTPException
-from sqlalchemy import or_, desc
+from sqlalchemy import or_, desc, asc
 from sqlalchemy.orm import joinedload, defer, load_only
 from starlette import status
-from models.models import Orders, Clean, Costumers, Buyurtma
+from models.models import Orders, Clean, Costumers, Buyurtma, User
 from utils.pagination import pagination
 
 
@@ -176,7 +178,7 @@ def order_first(db, id: int, filial_id: int, joinload: bool = True, operator_old
     if joinload:
         # Shunga qilishiga to'g'ri keldi. Bundan ham yaxshi yechilar bor albatta
         if operator_old:
-            order = order.options(joinedload(Orders.operator_oldi), joinedload(Orders.costumer))
+            order = order.options(joinedload(Orders.operator), joinedload(Orders.costumer))
         else:
             order = order.options(joinedload(Orders.costumer))
 
@@ -186,3 +188,124 @@ def order_first(db, id: int, filial_id: int, joinload: bool = True, operator_old
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bu id bo'yicha ma'lumot topilmadi")
 
     return order
+
+
+def order_filter_fililal_and_status_and_order_driver_count(db, filial_id: int, status: list, current_user: User = None,
+                                                           saygak_id: int = None):
+    query = db.query(Orders).filter(Orders.order_filial_id == filial_id, Orders.order_status.in_(status))
+
+    # roli transport bo'lsa o'zini buyurtmalari chaqiriladi
+    if current_user and current_user.role == "transport":
+        query = query.filter(Orders.order_driver == current_user.id)
+
+    # Saygak hodim bo'lsa
+    if saygak_id:
+        query = query.filter(Orders.saygak_id == saygak_id)
+    else:
+        query = query.filter(Orders.saygak_id == 0)
+    query = query.count()
+
+    return query
+
+
+def order_tartiblanmagan_tartiblangan_haydovchilar_get(db, filial_id: int, status: list = None,
+                                                       tartiblangan: bool = False):
+    ordes_user = db.query(Orders) \
+        .filter(Orders.order_filial_id == filial_id, Orders.order_status.in_(status)) \
+        .options(joinedload(Orders.driver)).group_by(Orders.order_driver)
+
+    # Tartiblangan bo'lsa nomer yoziladi tartiblanmagan bo'lsa nomer yozilmaydi (0)
+    if tartiblangan:
+        ordes_user = ordes_user.filter(Orders.tartib_raqam > 0)
+    else:
+        ordes_user = ordes_user.filter(Orders.tartib_raqam == 0)
+
+    # Tartiblangan bo'lsa nomer yoziladi tartiblanmagan bo'lsa nomer yozilmaydi (0)
+    if tartiblangan:
+        ordes_user = ordes_user.filter(Orders.tartib_raqam > 0)
+    else:
+        ordes_user = ordes_user.filter(Orders.tartib_raqam == 0)
+
+    ordes_user = ordes_user.all()
+
+    def count():
+        query = db.query(Orders).filter(Orders.order_driver == item.order_driver, Orders.order_status.in_(status))
+
+        if tartiblangan:
+            query = query.filter(Orders.tartib_raqam > 0)
+        else:
+            query = query.filter(Orders.tartib_raqam == 0)
+
+        return query.count()
+
+    data = []
+    for item in ordes_user:
+        data.append({
+            'id': item.driver.id,
+            'name': item.driver.fullname,
+            'count': count()
+        })
+
+    return data
+
+
+def order_tartiblanmagan_tartiblangan_get(db, page: int, limit: int, filial_id: int, status: list = None, tartiblangan: bool = False,
+                                          joinedload_table: bool = True, own: bool = False, joyida: bool = False,
+                                          count: bool = False, filter: Union[str, int] = None):
+    '''Tayyor buyurtmalarni chaqirib olish
+        * filial_id - fililyanlning id-si
+        * status - Chaqirilishi kerak bo'lgan statusdagi buyurtmalar
+        * tartiblangan - Tayyor buyurtmalar 2 ga bo'linadi tartiblangan va tartiblanmagan shularni qay biriligini tanlash kerak
+        * joinedload_table - Bizga bo'glangan bazalarni chaqirishi yoki chaqirmasligni belgilab beradi
+        * own - Buyurtmlarni mijoz o'zi olib ketadiganlarini ajiratib beradi
+        * joyida - Joyida yuviladigan buyurtmalarni ajiratib beradi
+        * count - Chaqririlgan ma'lumotlarni count-ni qaytaradi
+        * filter - Buyurtmalarni own, joyida va transport hodim id orqali ularni buyurtmalarini chiqarish
+    '''
+
+    query = db.query(Orders).join(Orders.cleans).filter(
+        Orders.order_filial_id == filial_id,
+        Orders.order_status.in_(status)
+    )
+
+    # Mijoz o'zi olip ketadigan buyurtmalar
+    if own or (filter and filter == 'own'):
+        query = query.filter(Orders.own == 1)
+
+    # Joyida yuviladigan buyurtmalar
+    if joyida or (filter and filter == 'joyida'):
+        query = query.filter(Orders.own == 1)
+
+    # Filter raqam jo'natsak ham str kelyapti shuni raqmga par qilvolamiz
+    if filter:
+        try:
+            filter = int(filter)
+        except ValueError as err:
+            pass
+
+        # Haydovchi buyurtmalari
+        if type(filter) == int:
+            query = query.filter(Orders.order_driver == filter)
+
+    # Tartiblangan bo'lsa nomer yoziladi tartiblanmagan bo'lsa nomer yozilmaydi (0)
+    if tartiblangan:
+        query = query.filter(Orders.tartib_raqam > 0).order_by(asc(Orders.tartib_raqam))
+    else:
+        query = query.filter(Orders.tartib_raqam == 0).order_by(asc(Orders.topshir_sana))
+
+    if joinedload_table:
+        query = query.options(
+            joinedload(Orders.operator),
+            joinedload(Orders.costumer),
+            joinedload(Orders.cleans).joinedload(Clean.xizmat),
+        )
+
+    # Bazida count-ni ham olishga to'g'ri keladi ;)
+    if count:
+        query = query.all()
+        query = len(query)
+        return query
+    else:
+        query = query
+
+    return pagination(query, page, limit)

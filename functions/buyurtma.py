@@ -1,5 +1,7 @@
 from datetime import datetime
 import pytz
+from sqlalchemy.orm import joinedload
+
 from models.models import Buyurtma
 
 
@@ -40,3 +42,14 @@ def insert_buyurtma(db, data: dict):
     db.commit()
     db.refresh(query)
     return query
+
+
+def select_all_buyurtma_with_status(db, order_id: int):
+    query = db.query(Buyurtma).filter(Buyurtma.order_id == order_id)
+    query = query.options(
+        joinedload(Buyurtma.xizmat),
+        joinedload(Buyurtma.order),
+    )
+    data = query.all()
+
+    return data

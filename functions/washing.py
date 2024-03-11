@@ -1,6 +1,7 @@
 from datetime import datetime
 import pytz
 from fastapi import HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 from starlette import status
 
@@ -83,4 +84,24 @@ def rewash(db, clean_id):
     order.order_status = "qayta yuvish"
     db.commit()
     return True
+
+
+def clean_with_status_and_product(db, order_id: int, product: int, status: list):
+    return db.query(Clean).filter(Clean.order_id == order_id, Clean.clean_product == product,
+                                  Clean.clean_status.in_(status)).all()
+
+
+def clean_with_status_and_product_sum(db, order_id: int, product: int, status: list, reclean_place: bool = False):
+    query = db.query(func.sum(Clean.clean_narx).label('total')).filter(Clean.order_id == order_id,
+                                                                       Clean.clean_product == product,
+                                                                       Clean.clean_status.in_(status))
+    if reclean_place:
+        query = query.filter(Clean.reclean_place != 3)
+    query = query.all()
+    total = 0
+    for item in query:
+        if item.total is not None:
+            total += item.total
+    return total
+
 
