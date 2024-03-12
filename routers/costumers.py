@@ -1,12 +1,16 @@
 import inspect
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException
 from db import get_db
 from sqlalchemy.orm import Session
 from models.models import Costumers
-from functions.costumers import all_costumers, update_costumer, create_costumer, history_costumer, nasiyalar
+from functions.costumers import all_costumers, update_costumer, create_costumer, history_costumer, nasiyalar, \
+    nasiyachilar, nasiyalar_all
 from routers.auth import current_active_user
-from schemas.costumers import CostumerCreate, CostumerUpdate
+from schemas.costumers import CostumerCreate, CostumerUpdate, NasiyachiResponseModel, NasiyalarResponseModel
 from schemas.users import UserCurrent
+from utils.pagination import PaginationResponseModel
 from utils.role_verification import role_verification
 
 router_costumer = APIRouter()
@@ -41,6 +45,20 @@ async def money_from_costumer(search: str = None, costumer_id: int = ..., page: 
 
 
 @router_costumer.get('/nasiyalar', status_code=200)
-async def money_from_costumer(search: str = None, nasiyachi_id: int = ..., page: int = 1,
-                              limit: int = 25, db: Session = Depends(get_db)):
+async def nasiyalar_get(search: str = None, nasiyachi_id: int = ..., page: int = 1,
+                        limit: int = 25, db: Session = Depends(get_db)):
     return nasiyalar(search, page, limit, nasiyachi_id, db)
+
+
+@router_costumer.get('/nasiyachilar', status_code=200)
+async def nasiyachilar_get(db: Session = Depends(get_db),
+                           current_user: UserCurrent = Depends(current_active_user)) -> List[NasiyachiResponseModel]:
+    return nasiyachilar(current_user.filial_id, db)
+
+
+@router_costumer.get('/nasiyalar_all', status_code=200)
+async def nasiyalar_all_get(search: str = None, nasiyachi_id: int = 0, page: int = 1,
+                            limit: int = 25, db: Session = Depends(get_db),
+                            current_user: UserCurrent = Depends(current_active_user)) -> \
+        PaginationResponseModel[NasiyalarResponseModel]:
+    return nasiyalar_all(search, page, limit, nasiyachi_id, current_user.filial_id, db)

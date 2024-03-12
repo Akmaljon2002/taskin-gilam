@@ -292,6 +292,7 @@ class Nasiya(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
 
     order = relationship('Orders')
+    nasiyachi = relationship('Costumers')
 
 
 class Recall(Base):

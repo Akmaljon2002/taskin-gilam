@@ -73,3 +73,19 @@ class PaginationResponse(BaseModel):
     pages: int
     data: Optional[Mijoz_kirim_chiqim] = None
 
+
+class NasiyachiResponseModel(BaseModel):
+    id: int
+    costumer_name: str
+    costumer_phone_1: str
+
+
+class NasiyalarResponseModel(BaseModel):
+    id: int
+    ber_date: date
+    status: str
+    user_id: int
+    nasiyachi_id: int
+    summa: int
+    nasiya: int
+    nasiyachi: Optional[NasiyachiResponseModel]

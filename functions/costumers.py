@@ -1,5 +1,6 @@
 import pytz
 from fastapi import HTTPException
+from sqlalchemy import asc
 from sqlalchemy.orm import joinedload, load_only
 from datetime import datetime
 from models.models import Costumers, Mijoz_kirim, Nasiya, Recall, Orders, Xizmatlar, Chegirma
@@ -130,3 +131,27 @@ async def update_costumer(form, db):
     })
     db.commit()
     return True
+
+
+def nasiyachilar(filial_id, db):
+    costumers = db.query(Costumers).filter(Costumers.costumers_filial_id == filial_id).all()
+    nasiyachilar = []
+    for item in costumers:
+        nasiya = db.query(Nasiya).filter(Nasiya.filial_id == filial_id, Nasiya.nasiyachi_id == item.id,
+                                         Nasiya.status.in_([0, 1])).first()
+        if nasiya:
+            nasiyachilar.append(item)
+    return nasiyachilar
+
+
+def nasiyalar_all(filter, page, limit, costumer_id, filial_id, db):
+    nasiyalar = db.query(Nasiya).filter(Nasiya.filial_id == filial_id, Nasiya.status.in_([0, 1])).options(
+        joinedload("nasiyachi"))
+    if costumer_id:
+        nasiyalar = nasiyalar.filter(Nasiya.nasiyachi_id == costumer_id)
+    if filter:
+        filter_formatted = "%{}%".format(filter)
+        nasiyalar = nasiyalar.join(Costumers).filter(
+            Nasiya.nasiyachi_id.like(filter_formatted) | Costumers.costumer_phone_1.like(filter_formatted) |
+            Costumers.costumer_name.like(filter_formatted) | Nasiya.filial_id.like(filter_formatted))
+    return pagination(nasiyalar.order_by(asc(Nasiya.ber_date)), page, limit)

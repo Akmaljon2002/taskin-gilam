@@ -60,3 +60,7 @@ def update_branch(form, db):
     db.commit()
 
     return True
+
+
+def filial_first(db, filial_id: int):
+    return db.query(Filial).filter(Filial.filial_id == filial_id).first()
