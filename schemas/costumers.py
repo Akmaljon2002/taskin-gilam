@@ -89,3 +89,15 @@ class NasiyalarResponseModel(BaseModel):
     summa: int
     nasiya: int
     nasiyachi: Optional[NasiyachiResponseModel]
+
+
+class TolovTuri(Enum):
+    Naqt = "naqd"
+    Click = "click"
+    Terminal_bank = "Terminal-bank"
+
+
+class NasiyaOlish(BaseModel):
+    nasiya_id: int
+    ol_summa: int
+    tolov_turi: Optional[TolovTuri]

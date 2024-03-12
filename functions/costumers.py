@@ -4,6 +4,7 @@ from sqlalchemy import asc
 from sqlalchemy.orm import joinedload, load_only
 from datetime import datetime
 from models.models import Costumers, Mijoz_kirim, Nasiya, Recall, Orders, Xizmatlar, Chegirma
+from schemas.costumers import TolovTuri
 from utils.orders import order_nomer
 from utils.pagination import pagination, save_in_db
 
@@ -155,3 +156,58 @@ def nasiyalar_all(filter, page, limit, costumer_id, filial_id, db):
             Nasiya.nasiyachi_id.like(filter_formatted) | Costumers.costumer_phone_1.like(filter_formatted) |
             Costumers.costumer_name.like(filter_formatted) | Nasiya.filial_id.like(filter_formatted))
     return pagination(nasiyalar.order_by(asc(Nasiya.ber_date)), page, limit)
+
+
+def nasiya_olish(form, user, db):
+    tolov_turi = form.tolov_turi.value
+    ol_summa = form.ol_summa
+    nasiya = db.query(Nasiya).filter(Nasiya.id == form.nasiya_id).first()
+    if nasiya.summa < ol_summa:
+        raise HTTPException(detail="Nasiya summadan katta summa kiritildi", status_code=400)
+    nasiya.summa -= ol_summa
+    if ol_summa>0:
+        mijoz_kirim = Mijoz_kirim(
+            summa=ol_summa,
+            tolov_turi=tolov_turi,
+            order_id=nasiya.order_id,
+            costumer_id=nasiya.nasiyachi_id,
+            date=datetime.now(pytz.timezone('Asia/Tashkent')),
+            status="olindi",
+            user_id=user.id,
+            filial_id=user.filial_id,
+            updated_at="0000-00-00 00:00:00"
+        )
+        save_in_db(db, mijoz_kirim)
+        if tolov_turi == TolovTuri.Naqt.value:
+            user.balance += ol_summa
+        else:
+            if tolov_turi == TolovTuri.Terminal_bank.value:
+                user.plastik += ol_summa
+            elif tolov_turi == TolovTuri.Click.value:
+                user.click += ol_summa
+        if nasiya.summa == 0:
+            nasiya.status = 3
+    db.commit()
+    return True
+
+
+def nasiya_kechish(nasiya_id, user, db):
+    nasiya = db.query(Nasiya).filter(Nasiya.id == nasiya_id).first()
+    nasiya.status = 4
+    if nasiya.summa > 0:
+        mijoz_kirim = Mijoz_kirim(
+            summa=nasiya.summa,
+            tolov_turi=TolovTuri.Naqt.value,
+            order_id=nasiya.order_id,
+            costumer_id=nasiya.nasiyachi_id,
+            date=datetime.now(pytz.timezone('Asia/Tashkent')),
+            status="kechildi",
+            user_id=user.id,
+            filial_id=user.filial_id,
+            updated_at="0000-00-00 00:00:00"
+        )
+        save_in_db(db, mijoz_kirim)
+    db.commit()
+    return True
+
+

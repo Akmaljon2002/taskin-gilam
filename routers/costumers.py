@@ -6,9 +6,10 @@ from db import get_db
 from sqlalchemy.orm import Session
 from models.models import Costumers
 from functions.costumers import all_costumers, update_costumer, create_costumer, history_costumer, nasiyalar, \
-    nasiyachilar, nasiyalar_all
+    nasiyachilar, nasiyalar_all, nasiya_olish, nasiya_kechish
 from routers.auth import current_active_user
-from schemas.costumers import CostumerCreate, CostumerUpdate, NasiyachiResponseModel, NasiyalarResponseModel
+from schemas.costumers import CostumerCreate, CostumerUpdate, NasiyachiResponseModel, NasiyalarResponseModel, \
+    NasiyaOlish
 from schemas.users import UserCurrent
 from utils.pagination import PaginationResponseModel
 from utils.role_verification import role_verification
@@ -62,3 +63,17 @@ async def nasiyalar_all_get(search: str = None, nasiyachi_id: int = 0, page: int
                             current_user: UserCurrent = Depends(current_active_user)) -> \
         PaginationResponseModel[NasiyalarResponseModel]:
     return nasiyalar_all(search, page, limit, nasiyachi_id, current_user.filial_id, db)
+
+
+@router_costumer.put("/nasiya_olish")
+async def costumer_update(form: NasiyaOlish, db: Session = Depends(get_db),
+                          current_user: UserCurrent = Depends(current_active_user)):
+    if nasiya_olish(form, current_user, db):
+        raise HTTPException(status_code=200, detail="Updated successfully!")
+
+
+@router_costumer.put("/nasiya_kechish")
+async def costumer_update(nasiya_id: int, db: Session = Depends(get_db),
+                          current_user: UserCurrent = Depends(current_active_user)):
+    if nasiya_kechish(nasiya_id, current_user, db):
+        raise HTTPException(status_code=200, detail="Updated successfully!")
