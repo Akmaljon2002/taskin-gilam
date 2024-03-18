@@ -36,7 +36,8 @@ async def add_costumer(form: CostumerCreate,
 
 @router_costumer.get('/', status_code=200)
 async def get_costumers(search: str = None, costumer_id: int = 0, page: int = 1,
-                        limit: int = 25, db: Session = Depends(get_db)) -> \
+                        limit: int = 25, db: Session = Depends(get_db),
+                        current_user: UserCurrent = Depends(current_active_user)) -> \
         PaginationResponseModel[CostumerResponseModel]:
     if costumer_id:
         return db.query(Costumers).filter(Costumers.id == costumer_id).first()
@@ -44,20 +45,23 @@ async def get_costumers(search: str = None, costumer_id: int = 0, page: int = 1,
 
 
 @router_costumer.put("/update")
-async def costumer_update(form: CostumerUpdate, db: Session = Depends(get_db)):
+async def costumer_update(form: CostumerUpdate, db: Session = Depends(get_db),
+                          current_user: UserCurrent = Depends(current_active_user)):
     if await update_costumer(form, db):
         raise HTTPException(status_code=200, detail="Updated successfully!")
 
 
 @router_costumer.get('/money_from_costumer', status_code=200)
 async def money_from_costumer(search: str = None, costumer_id: int = ..., page: int = 1,
-                              limit: int = 25, db: Session = Depends(get_db)):
+                              limit: int = 25, db: Session = Depends(get_db),
+                              current_user: UserCurrent = Depends(current_active_user)):
     return history_costumer(search, page, limit, costumer_id, db)
 
 
 @router_costumer.get('/nasiyalar', status_code=200)
 async def nasiyalar_get(search: str = None, nasiyachi_id: int = ..., page: int = 1,
-                        limit: int = 25, db: Session = Depends(get_db)):
+                        limit: int = 25, db: Session = Depends(get_db),
+                        current_user: UserCurrent = Depends(current_active_user)):
     return nasiyalar(search, page, limit, nasiyachi_id, db)
 
 
