@@ -4,9 +4,9 @@ from fastapi import HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 from starlette import status
-
 from functions.orders import one_order
-from models.models import Clean, Xizmatlar
+from models.models import Clean, Xizmatlar, Orders
+from schemas.washing import CleanStatus
 from utils.barcode import generate_unique_number
 
 
@@ -103,5 +103,25 @@ def clean_with_status_and_product_sum(db, order_id: int, product: int, status: l
         if item.total is not None:
             total += item.total
     return total
+
+
+def qaytayuv(clean_id, filial_id, db):
+    clean = clean_first(db, clean_id)
+    if not clean:
+        raise HTTPException(status_code=400, detail="Clean not found!")
+    clean.clean_status = 'qayta yuvish'
+    if clean.reclean_place < 3:
+        clean.reclean_place = 2
+    clean.qayta_sana = datetime.now(pytz.timezone('Asia/Tashkent'))
+    clean.joy = ''
+
+    cleans_count = db.query(Clean).filter(Clean.order_id == clean.order_id, Clean.clean_status.in_([
+        CleanStatus.QADOQLANDI.value, CleanStatus.QAYTA_QADOQLANDI.value]), Clean.clean_filial_id == filial_id).count()
+    if cleans_count == 0:
+        order = one_order(clean.order_id, db)
+        order.order_status = 'qayta yuvish'
+    db.commit()
+    return True
+
 
 

@@ -7,14 +7,16 @@ from db import get_db
 from functions.branches import filial_first
 from functions.buyurtma import select_all_buyurtma_with_status
 from functions.orders import order_filter_fililal_and_status_and_order_driver_count, \
-    order_tartiblanmagan_tartiblangan_haydovchilar_get, order_tartiblanmagan_tartiblangan_get, order_first, update_order
-from functions.transport import one_driver, all_drivers
-from functions.washing import clean_with_status_and_product, clean_with_status_and_product_sum
+    order_tartiblanmagan_tartiblangan_haydovchilar_get, order_tartiblanmagan_tartiblangan_get, order_first, \
+    update_order, omborga_otkazish, order_ombordan_tayyorga
+from functions.transport import one_driver, all_drivers, order_topshirish, ombordan_tartib_all
+from functions.washing import clean_with_status_and_product, clean_with_status_and_product_sum, qaytayuv
 from routers.auth import current_active_user
+from schemas.costumers import TolovTuri
 from schemas.orders import OrderStatus, TartiblanganTartiblanmaganEnum, OrderFilterResponse, \
     OrderTayyorBuyurtmaResponse, OrderTartiblash, OrderTartiblashResponse, OrderKvitansiyaResponse, \
-    TayyorKvitansiyaMahsulotResponse
-from schemas.transport import BuyurtmaSkladTopshiriladiganResponse
+    TayyorKvitansiyaMahsulotResponse, OrderYuvishResponse
+from schemas.transport import BuyurtmaSkladTopshiriladiganResponse, TopshirishSchema
 from schemas.users import UserCurrent
 from schemas.washing import CleanStatus
 from utils.pagination import PaginationResponseModel
@@ -247,3 +249,49 @@ async def tayyor_kvitansiya(order_id: int, db: Session = Depends(get_db),
         'kvitansiya_izoh': order.izoh2 if order.izoh2 and order.izoh2 != 'to`ldirilmadi' else None,
         'transport_izoh': order.izoh3 if order.izoh3 and order.izoh3 != 'to`ldirilmadi' else None,
     }
+
+
+@router_transport.put('/qaytayuv', status_code=status.HTTP_200_OK)
+async def qaytayuv_put(clean_id: int, db: Session = Depends(get_db),
+                       current_user: UserCurrent = Depends(current_active_user)):
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
+    if qaytayuv(clean_id, current_user.filial_id, db):
+        raise HTTPException(status_code=200, detail="Updated successfully!")
+
+
+@router_transport.put('/omborga', status_code=status.HTTP_200_OK)
+async def omborga_put(order_id: int, db: Session = Depends(get_db),
+                      current_user: UserCurrent = Depends(current_active_user)):
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
+    if omborga_otkazish(order_id, current_user.filial_id, current_user.id, db):
+        raise HTTPException(status_code=200, detail="Updated successfully!")
+
+
+@router_transport.put('/topshirish', status_code=200)
+async def topshirish_def(form: TopshirishSchema, db: Session = Depends(get_db),
+                         current_user: UserCurrent = Depends(current_active_user)):
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
+    if order_topshirish(form.order_id, current_user.filial_id, current_user, form.tolov_turi.value, form.summa, db):
+        raise HTTPException(status_code=201, detail="Successfully!")
+
+
+@router_transport.get('/ombordan_tayyor_buyurtmaga', status_code=status.HTTP_200_OK)
+async def ombordan_tayyor_buyurtmaga_put(page: int = 1, limit: int = 25, db: Session = Depends(get_db),
+                              current_user: UserCurrent = Depends(current_active_user)) -> \
+        PaginationResponseModel[OrderYuvishResponse]:
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
+    """
+    Ombor > Sklad bo'limi get
+    """
+    return ombordan_tartib_all(page, limit, current_user.filial_id, db)
+
+
+@router_transport.put('/ombordan_tayyor', status_code=200)
+async def topshirish_def(order_id: int, db: Session = Depends(get_db),
+                         current_user: UserCurrent = Depends(current_active_user)):
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
+    """
+        Ombor > Sklad bo'limi update
+    """
+    if order_ombordan_tayyorga(order_id, current_user.filial_id, db):
+        raise HTTPException(status_code=201, detail="Successfully!")

@@ -1,12 +1,13 @@
 from datetime import datetime
 from typing import Union
-
 import pytz
 from fastapi import HTTPException
 from sqlalchemy import or_, desc, asc
 from sqlalchemy.orm import joinedload, defer, load_only
 from starlette import status
 from models.models import Orders, Clean, Costumers, Buyurtma, User
+from schemas.orders import OrderStatus
+from schemas.washing import CleanStatus
 from utils.pagination import pagination
 
 
@@ -309,3 +310,29 @@ def order_tartiblanmagan_tartiblangan_get(db, page: int, limit: int, filial_id: 
         query = query
 
     return pagination(query, page, limit)
+
+
+def omborga_otkazish(order_id, filial_id, user_id, db):
+    order = db.query(Orders).filter(Orders.order_id == order_id, Orders.order_filial_id == filial_id).first()
+    if not order:
+        raise HTTPException(status_code=400, detail="Order topilmadi!")
+    order.order_status = "ombor"
+    order.ombor_user = user_id
+    db.commit()
+    return True
+
+
+def order_ombordan_tayyorga(order_id, filial_id, db):
+    order = db.query(Orders).filter(Orders.order_id == order_id, Orders.order_filial_id == filial_id).first()
+    if not order:
+        raise HTTPException(status_code=400, detail="Order topilmadi!")
+    cleans = db.query(Clean).filter(Clean.order_id == order_id,
+                                    Clean.clean_status == CleanStatus.QAYTA_QADOQLANDI.value).count()
+    if cleans > 0:
+        order.order_status = OrderStatus.QAYTA_QADOQLANDI.value
+    else:
+        order.order_status = OrderStatus.QADOQLANDI.value
+    order.ombor_user = 0
+    db.commit()
+    return True
+

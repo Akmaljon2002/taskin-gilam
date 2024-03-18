@@ -287,7 +287,7 @@ class Nasiya(Base):
     user_id = Column(Integer, ForeignKey("user.id"))
     date = Column(Date)
     order_id = Column(Integer, ForeignKey("orders.order_id"))
-    izoh = Column(String(111))
+    izoh = Column(String(111), default='')
     created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
     updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
 
@@ -379,6 +379,17 @@ class Buyurtma(Base):
 
     xizmat = relationship('Xizmatlar')
     order = relationship('Orders')
+
+
+class NasiyaBelgilash(Base):
+    __tablename__ = 'nasiya_belgilash'
+    id = Column(Integer, primary_key=True)
+    foiz = Column(Float)
+    summa = Column(Integer, default=0)
+    filial_id = Column(Integer)
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+
 
 
 

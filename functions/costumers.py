@@ -16,8 +16,7 @@ def all_costumers(search, page, limit, db):
         costumers = costumers.filter(
             Costumers.costumer_name.like(search_formatted) | Costumers.costumer_phone_1.like(search_formatted) |
             Costumers.costumer_phone_2.like(search_formatted) | Costumers.costumer_phone_3.like(search_formatted) |
-            Costumers.manba.like(search_formatted) | Costumers.izoh.like(search_formatted) |
-            Costumers.costumer_turi.like(search_formatted) | Costumers.costumer_addres.like(search_formatted))
+            Costumers.costumer_addres.like(search_formatted))
     return pagination(costumers, page, limit)
 
 
@@ -44,7 +43,7 @@ def nasiyalar(search, page, limit, costumer_id, db):
     return pagination(nasiyalar, page, limit)
 
 
-def create_costumer(form, user_id, filial_id, db):
+def create_costumer_order(form, user_id, filial_id, db):
     phone_val = db.query(Costumers).filter(Costumers.costumer_phone_1 == f"+998{form.costumer_phone_1}").first()
     if phone_val:
         raise HTTPException(status_code=400, detail="Bunda telefon nomer oldin royhatdan o'tkazilgan!")
@@ -112,6 +111,31 @@ def create_costumer(form, user_id, filial_id, db):
                 db.add(new_chegirma)
 
     db.commit()
+    return True
+
+
+def create_costumer(form, user_id, filial_id, db):
+    phone_val = db.query(Costumers).filter(Costumers.costumer_phone_1 == f"+998{form.costumer_phone_1}").first()
+    if phone_val:
+        raise HTTPException(status_code=400, detail="Bunda telefon nomer oldin royhatdan o'tkazilgan!")
+    if form.costumer_phone_2:
+        form.costumer_phone_2 = f"+998{form.costumer_phone_2}"
+    new_costumer = Costumers(
+        costumers_filial_id=filial_id,
+        costumer_name=form.costumer_name,
+        costumer_phone_1=f"+998{form.costumer_phone_1}",
+        costumer_phone_2=form.costumer_phone_2,
+        costumer_addres=form.costumer_addres,
+        manba=form.manba,
+        costumer_status="keltirish",
+        user_id=user_id,
+        millat_id=form.millat_id,
+        created_at=datetime.now(pytz.timezone('Asia/Tashkent')),
+        updated_at="0000-00-00 00:00:00"
+
+    )
+    save_in_db(db, new_costumer)
+
     return True
 
 
@@ -207,6 +231,22 @@ def nasiya_kechish(nasiya_id, user, db):
             updated_at="0000-00-00 00:00:00"
         )
         save_in_db(db, mijoz_kirim)
+    db.commit()
+    return True
+
+
+def nasiyalar_tasdiqlanmagan_all(page, limit, filial_id, db):
+    nasiyalar = db.query(Nasiya).filter(Nasiya.filial_id == filial_id, Nasiya.status == 0).options(
+        joinedload("nasiyachi"))
+    return pagination(nasiyalar.order_by(asc(Nasiya.ber_date)), page, limit)
+
+
+def nasiya_tasdiqlash(nasiya_id, ber_date, db):
+    nasiya = db.query(Nasiya).filter(Nasiya.id == nasiya_id, Nasiya.status == 0).first()
+    if not nasiya:
+        raise HTTPException(status_code=400, detail="Nasiya not found!")
+    nasiya.status = 1
+    nasiya.ber_date = ber_date
     db.commit()
     return True
 

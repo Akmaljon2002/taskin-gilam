@@ -1,4 +1,4 @@
-from datetime import date, time
+from datetime import date, time, datetime
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, Field
@@ -22,7 +22,7 @@ class Costumer_turi(Enum):
     qora_royxat = "Qora ro`yxat"
 
 
-class CostumerCreate(BaseModel):
+class CostumerCreateOrder(BaseModel):
     costumer_name: str
     costumer_phone_1: str
     costumer_phone_2: Optional[str] = None
@@ -101,3 +101,21 @@ class NasiyaOlish(BaseModel):
     nasiya_id: int
     ol_summa: int
     tolov_turi: Optional[TolovTuri]
+
+
+class CostumerResponseModel(BaseModel):
+    id: int
+    costumer_name: str
+    costumer_phone_1: str
+    costumer_addres: str
+    buyurtma: bool = False
+    costumer_date: datetime
+
+
+class CostumerCreate(BaseModel):
+    costumer_name: str
+    costumer_phone_1: str
+    costumer_phone_2: Optional[str] = None
+    costumer_addres: str
+    manba: Optional[str] = None
+    millat_id: str
