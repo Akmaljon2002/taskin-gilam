@@ -250,7 +250,8 @@ def order_tartiblanmagan_tartiblangan_haydovchilar_get(db, filial_id: int, statu
     return data
 
 
-def order_tartiblanmagan_tartiblangan_get(db, page: int, limit: int, filial_id: int, status: list = None, tartiblangan: bool = False,
+def order_tartiblanmagan_tartiblangan_get(db, page: int, limit: int, filial_id: int, status: list = None,
+                                          tartiblangan: bool = False,
                                           joinedload_table: bool = True, own: bool = False, joyida: bool = False,
                                           count: bool = False, filter: Union[str, int] = None):
     '''Tayyor buyurtmalarni chaqirib olish
@@ -336,3 +337,29 @@ def order_ombordan_tayyorga(order_id, filial_id, db):
     db.commit()
     return True
 
+
+def currently_def(search, status_clean, muddat, page, limit, user, db):
+    if status_clean:
+        search_formatted = "%{}%".format(status_clean.value)
+        orders = db.query(Orders).filter(Orders.order_filial_id == user.filial_id).join(Orders.cleans).filter(
+            Clean.clean_status.like(search_formatted)
+        )
+    else:
+        orders = db.query(Orders).join(Clean).filter(Orders.order_filial_id == user.filial_id)
+
+    if muddat:
+        now_date = datetime.now(pytz.timezone('Asia/Tashkent')).date()
+        if muddat.value == "qizil":
+            orders = orders.filter(Orders.topshir_sana < now_date)
+        elif muddat.value == "sariq":
+            orders = orders.filter(Orders.topshir_sana == now_date)
+        else:
+            orders = orders.filter(Orders.topshir_sana > now_date)
+
+    if search:
+        search_formatted = "%{}%".format(search)
+        orders = orders.join(Costumers).filter(
+            Orders.nomer.like(search_formatted) | Costumers.costumer_phone_1.like(search_formatted) |
+            Costumers.costumer_phone_2.like(search_formatted) | Costumers.costumer_phone_3.like(search_formatted))
+
+    return pagination(orders, page, limit)

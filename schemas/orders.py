@@ -305,7 +305,6 @@ class TayyorKvitansiyaClean(BaseModel):
             check=res_clean(self.reclean_place, 'check.png'),
             res=res_clean(self.clean_status, 'restart.png')
         )
-        print(self.clean_status)
         delattr(self, 'reclean_place')
         delattr(self, 'xizmat')
         return self
@@ -337,3 +336,33 @@ class TayyorKvitansiyaMahsulotResponse(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
+
+
+class Clean1(BaseModel):
+    narx: float = None
+    clean_narx: float = None
+    joy: str = None
+    clean_status: str
+    xizmat: Xizmat
+
+
+class OrderCurrentlyResponseModel(BaseModel):
+    order_id: int
+    nomer: int
+    topshir_sana: date | str
+    izoh: str
+    izoh2: str
+    izoh3: str
+    order_status: str
+    cleans_count: int = None
+    costumer: Optional[Costumer]
+    cleans: List[Clean1]
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class MuddatEnum(Enum):
+    qizil = 'qizil'
+    sariq = 'sariq'
+    yashil = 'yashil'

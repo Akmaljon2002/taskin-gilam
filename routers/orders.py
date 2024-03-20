@@ -4,8 +4,9 @@ from sqlalchemy.orm import Session
 from db import get_db
 from functions.orders import *
 from routers.auth import current_active_user
-from schemas.orders import Order_status, Order_accept, CancelOrder
+from schemas.orders import Order_status, Order_accept, CancelOrder, OrderCurrentlyResponseModel, MuddatEnum
 from schemas.users import UserCurrent
+from utils.pagination import PaginationResponseModel
 from utils.role_verification import role_verification
 
 router_order = APIRouter()
@@ -68,3 +69,12 @@ async def called_order_put(order_id: int,
     role_verification(current_user, inspect.currentframe().f_code.co_name)
     if called_order(order_id, current_user.filial_id, db):
         raise HTTPException(status_code=201, detail="Successfully!")
+
+
+@router_order.get('/currently', status_code=200)
+async def get_orders_driver(status_clean: CleanStatus = None, muddat: MuddatEnum = None, search: str = None,
+                            page: int = 1, limit: int = 25, db: Session = Depends(get_db),
+                            current_user: UserCurrent = Depends(current_active_user)) ->\
+        PaginationResponseModel[OrderCurrentlyResponseModel]:
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
+    return currently_def(search, status_clean, muddat, page, limit, current_user, db)

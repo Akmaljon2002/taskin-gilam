@@ -1,5 +1,6 @@
 import pytz
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Date, Float, func, and_
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from db import Base
 from datetime import datetime
@@ -180,6 +181,10 @@ class Orders(Base):
     costumer = relationship('Costumers', back_populates='order')
 
     driver = relationship('User', foreign_keys=[order_driver], primaryjoin=lambda: and_(User.id == Orders.order_driver))
+
+    @hybrid_property
+    def cleans_count(self):
+        return len(self.cleans)
 
     def __repr__(self):
         return "<Clean (id='{}', order_id='{}', clean_status='{}')>".format(

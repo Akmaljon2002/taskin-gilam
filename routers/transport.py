@@ -277,7 +277,7 @@ async def topshirish_def(form: TopshirishSchema, db: Session = Depends(get_db),
 
 @router_transport.get('/ombordan_tayyor_buyurtmaga', status_code=status.HTTP_200_OK)
 async def ombordan_tayyor_buyurtmaga_put(page: int = 1, limit: int = 25, db: Session = Depends(get_db),
-                              current_user: UserCurrent = Depends(current_active_user)) -> \
+                                         current_user: UserCurrent = Depends(current_active_user)) -> \
         PaginationResponseModel[OrderYuvishResponse]:
     role_verification(current_user, inspect.currentframe().f_code.co_name)
     """
