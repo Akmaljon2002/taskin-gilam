@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
@@ -25,3 +26,13 @@ def tokchalar_order_cleans_def(page, limit, filial_id, tokcha, db):
         Orders.order_id).having(func.count(Clean.id) > 0)
 
     return pagination(orders, page, limit)
+
+
+def tokcha_update(tokcha, clean_id, filial_id, db):
+    clean = db.query(Clean).filter(Clean.id == clean_id, Clean.clean_filial_id == filial_id).first()
+    if not clean:
+        raise HTTPException(status_code=400, detail="Clean not found!")
+
+    clean.joy = tokcha
+    db.commit()
+    return True
