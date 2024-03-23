@@ -179,16 +179,27 @@ class Orders(Base):
     mintaqa = relationship('Mintaqa', back_populates='order')
     cleans = relationship('Clean', back_populates='order')
     costumer = relationship('Costumers', back_populates='order')
+    mijoz_kirim = relationship('Mijoz_kirim', back_populates='order')
 
     driver = relationship('User', foreign_keys=[order_driver], primaryjoin=lambda: and_(User.id == Orders.order_driver))
+    f_driver = relationship('User', foreign_keys=[finish_driver], primaryjoin=lambda: and_(
+        User.id == Orders.finish_driver))
 
     @hybrid_property
     def cleans_count(self):
         return len(self.cleans)
 
+    @hybrid_property
+    def mijoz_kirim_summa(self):
+        summa = 0
+        for i in self.mijoz_kirim:
+            if i.status == "olindi":
+                summa += i.summa
+        return summa
+
     def __repr__(self):
-        return "<Clean (id='{}', order_id='{}', clean_status='{}')>".format(
-            self.id, self.order_id, self.clean_status)
+        return "<Clean (order_id='{}')>".format(
+            self.order_id)
 
 
 class Clean(Base):
@@ -277,7 +288,7 @@ class Mijoz_kirim(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
 
     user = relationship('User')
-    order = relationship('Orders')
+    order = relationship('Orders', back_populates='mijoz_kirim')
 
 
 class Nasiya(Base):

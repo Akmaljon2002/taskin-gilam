@@ -1,7 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
-
 from models.models import Clean, Orders
 from schemas.washing import CleanStatus
 from utils.pagination import pagination

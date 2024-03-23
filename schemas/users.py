@@ -1,7 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, Generic, TypeVar, Any
-
-from pydantic.generics import GenericModel
+from typing import Optional
 from sqlalchemy.orm import Session
 from db import SessionLocal
 
@@ -43,4 +41,9 @@ class UserCurrent(BaseModel):
     username: str
     password_hash: str
     role: str
+
+
+class DriverResponseModel(BaseModel):
+    id: int
+    fullname: str
 
