@@ -5,10 +5,13 @@ from fastapi import HTTPException
 from sqlalchemy import or_, desc, asc
 from sqlalchemy.orm import joinedload, defer, load_only
 from starlette import status
-from models.models import Orders, Clean, Costumers, Buyurtma, User
+
+from functions.sozlamalar import check_limit_def
+from models.models import Orders, Clean, Costumers, Buyurtma, User, Chegirma
 from schemas.orders import OrderStatus
 from schemas.washing import CleanStatus
-from utils.pagination import pagination
+from utils.orders import order_nomer
+from utils.pagination import pagination, save_in_db
 
 
 def all_orders(search, page, limit, db):
@@ -32,18 +35,14 @@ def one_order(order_id, db):
                                                "joy", "qad_user"))).first()
 
 
-def orders_to_drivers(search, page, limit, user_id, status, db):
-    orders = db.query(Orders).options(
-        joinedload("driver"),
-        joinedload("operator").options(defer("password_hash"), defer("api_token"), defer("auth_key")),
-        joinedload("costumer").subqueryload("millat").options(load_only("name"))
-    )
-    if status == "keltirish":
+def orders_to_drivers(search, page, limit, user, status, db):
+    orders = db.query(Orders).filter(Orders.order_filial_id == user.filial_id)
+    if status.value == "keltirish":
         orders = orders.filter(
-            Orders.order_status == "keltirish", or_(Orders.order_driver == "hamma", Orders.order_driver == user_id))
+            Orders.order_status == "keltirish", or_(Orders.order_driver == "hamma", Orders.order_driver == user.id))
     else:
         orders = orders.filter(
-            Orders.order_status == "qabul qilindi", Orders.order_driver == user_id
+            Orders.order_status == "qabul qilindi", Orders.order_driver == user.id
         ).order_by(desc(Orders.order_id))
     if search:
         search_formatted = "%{}%".format(search)
@@ -52,8 +51,8 @@ def orders_to_drivers(search, page, limit, user_id, status, db):
     return pagination(orders, page, limit)
 
 
-def order_to_drivers(order_id, db):
-    order = db.query(Orders).filter(Orders.order_id == order_id).options(
+def order_to_drivers(order_id, user, db):
+    order = db.query(Orders).filter(Orders.order_id == order_id, Orders.order_filial_id == user.filial_id).options(
         joinedload("driver"),
         joinedload("operator").options(defer("password_hash"), defer("api_token"), defer("auth_key")),
         joinedload("costumer").subqueryload("millat").options(load_only("name"))
@@ -61,9 +60,9 @@ def order_to_drivers(order_id, db):
     return order
 
 
-def recleans(search, page, limit, user_id, db):
-    cleans = db.query(Clean).filter(Clean.reclean_place == 3,
-                                    or_(Clean.reclean_driver == 0, Clean.reclean_driver == user_id)).options(
+def recleans(search, page, limit, user, db):
+    cleans = db.query(Clean).filter(Clean.reclean_place == 3, Clean.clean_filial_id == user.filial_id,
+                                    or_(Clean.reclean_driver == 0, Clean.reclean_driver == user.id)).options(
         joinedload("order").subqueryload('operator').options(defer("password_hash"), defer("auth_key"),
                                                              defer("api_token")),
         joinedload("driver"), joinedload("costumer").subqueryload("millat").options(load_only("name"))
@@ -76,8 +75,8 @@ def recleans(search, page, limit, user_id, db):
     return pagination(cleans, page, limit)
 
 
-def reclean(clean_id, db):
-    clean = db.query(Clean).filter(Clean.id == clean_id).options(
+def reclean(clean_id, user, db):
+    clean = db.query(Clean).filter(Clean.id == clean_id, Clean.clean_filial_id == user.filial_id).options(
         joinedload("order").subqueryload('operator').options(defer("password_hash"), defer("auth_key"),
                                                              defer("api_token")),
         joinedload("driver"), joinedload("costumer").subqueryload("millat").options(load_only("name"))).first()
@@ -117,7 +116,8 @@ def accept_order(form, user_id, filial_id, db):
     costumer.costumers_filial_id = filial_id
     costumer.costumer_status = "kutish"
     db.commit()
-    return True
+    db.refresh(order)
+    return order
 
 
 def edit_order_driver(order_id, driver_id, filial_id, db):
@@ -363,3 +363,43 @@ def currently_def(search, status_clean, muddat, page, limit, user, db):
             Costumers.costumer_phone_2.like(search_formatted) | Costumers.costumer_phone_3.like(search_formatted))
 
     return pagination(orders, page, limit)
+
+
+def create_order(form, user, db):
+    costumer = db.query(Costumers).filter(Costumers.id == form.costumer_id,
+                                          Costumers.costumers_filial_id == user.filial_id).first()
+    if not costumer:
+        raise HTTPException(detail="Costumer not found!", status_code=400)
+    buyutma_limit = check_limit_def(user, db)
+    # if not buyutma_limit['buyurtma_olish_state']:
+    #     raise HTTPException(detail="Sizning limitingiz tugagan!", status_code=400)
+    nomer = order_nomer(db)
+    new_order = Orders(
+        costumer_id=costumer.id,
+        nomer=nomer,
+        operator_id=user.id,
+        order_filial_id=user.filial_id,
+        order_date=datetime.now(pytz.timezone('Asia/Tashkent')),
+        olibk_sana="0000-00-00 00:00:00",
+        izoh=form.izoh,
+        order_driver=form.order_driver,
+        order_skidka_foiz=form.order_skidka_foiz,
+        order_skidka_sum=form.order_skidka_sum,
+        created_at=datetime.now(pytz.timezone('Asia/Tashkent')),
+        updated_at="0000-00-00 00:00:00",
+    )
+    costumer.costumer_status = "keltirish"
+    save_in_db(db, new_order)
+    for x_item in form.xizmat:
+        if 0 < x_item.chegirma_summa < x_item.summa:
+            new_chegirma = Chegirma(
+                order_id=new_order.order_id,
+                xizmat_id=x_item.id,
+                summa=x_item.summa-x_item.chegirma_summa,
+                created_at=datetime.now(pytz.timezone('Asia/Tashkent')),
+                updated_at="0000-00-00 00:00:00"
+            )
+            db.add(new_chegirma)
+
+    db.commit()
+    return True

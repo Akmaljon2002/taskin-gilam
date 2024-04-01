@@ -11,27 +11,27 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     username = Column(String(255), unique=True)
     password_hash = Column(String(255))
-    auth_key = Column(String(32))
+    auth_key = Column(String(32), default='')
     status = Column(Integer)
     fullname = Column(String(255))
     filial_id = Column(Integer)
-    maosh = Column(Integer)
+    maosh = Column(Integer, default=0)
     kpi = Column(Boolean)
     oylik = Column(Integer)
     role = Column(String(255))
     phone = Column(Integer)
     created_at = Column(Integer)
     updated_at = Column(Integer)
-    balance = Column(Integer)
+    balance = Column(Integer, default=0)
     moi_zvonki_user_name = Column(String(255))
     user_moi_zvonki_address = Column(String(255))
     user_moi_zvonki_api = Column(String(255))
     ozroq_kpi = Column(Boolean)
-    plastik = Column(Integer)
-    click = Column(Integer)
+    plastik = Column(Integer, default=0)
+    click = Column(Integer, default=0)
     phone2 = Column(String(15))
     zayavka_limit = Column(Integer)
-    topshirish_limit = Column(Integer)
+    topshirish_limit = Column(Integer, default=0)
     skald_limit = Column(Integer)
     api_token = Column(String(255), default='')
     zakaz_status = Column(Integer)
@@ -184,6 +184,10 @@ class Orders(Base):
     driver = relationship('User', foreign_keys=[order_driver], primaryjoin=lambda: and_(User.id == Orders.order_driver))
     f_driver = relationship('User', foreign_keys=[finish_driver], primaryjoin=lambda: and_(
         User.id == Orders.finish_driver))
+    last_operator = relationship('User', foreign_keys=[last_operator_id], primaryjoin=lambda: and_(
+        User.id == Orders.last_operator_id))
+    last_operator2 = relationship('User', foreign_keys=[last_operator_id2], primaryjoin=lambda: and_(
+        User.id == Orders.last_operator_id2))
 
     @hybrid_property
     def cleans_count(self):
@@ -236,7 +240,8 @@ class Clean(Base):
     xizmat = relationship('Xizmatlar', back_populates='cleans')
     order = relationship('Orders', back_populates='cleans')
     costumer = relationship('Costumers', back_populates='clean')
-    driver = relationship('User', foreign_keys=[reclean_driver], primaryjoin=lambda: and_(User.id == Clean.reclean_driver))
+    driver = relationship('User', foreign_keys=[reclean_driver],
+                          primaryjoin=lambda: and_(User.id == Clean.reclean_driver))
 
     def __repr__(self):
         return "<Clean (id='{}', order_id='{}', clean_status='{}')>".format(
@@ -325,6 +330,12 @@ class Recall(Base):
     created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
     updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
 
+    costumer = relationship('Costumers', foreign_keys=[recall_costumer_phone],
+                            primaryjoin=lambda: and_(Costumers.costumer_phone_1 == Recall.recall_costumer_phone,
+                                                     Costumers.costumers_filial_id == Recall.recall_filial_id))
+    operator = relationship('User', foreign_keys=[operator_id],
+                            primaryjoin=lambda: and_(User.id == Recall.operator_id))
+
 
 class Xizmatlar(Base):
     __tablename__ = "xizmatlar"
@@ -407,5 +418,38 @@ class NasiyaBelgilash(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
 
 
+class Sms_template(Base):
+    __tablename__ = 'sms_template'
+    id = Column(Integer, primary_key=True)
+    filial_id = Column(Integer)
+    keyword = Column(String(255))
+    note = Column(String(255))
+    text = Column(String(255))
+    status = Column(Boolean)
+    sms_driver = Column(Boolean)
+    costumer_category = Column(String(255))
+    delete_status = Column(Integer)
 
 
+class Sms_setting(Base):
+    __tablename__ = 'sms_setting'
+    id = Column(Integer, primary_key=True)
+    filial_id = Column(Integer)
+    qadoqlanganda_status = Column(Boolean)
+    yuvilganda_status = Column(Boolean)
+    buyurtma_oln_status = Column(Boolean)
+    transport_topshir = Column(Boolean)
+    foydalanuvchi_qoshilganda = Column(Boolean)
+
+
+class Sms_sended(Base):
+    __tablename__ = 'sms_sended'
+    id = Column(Integer, primary_key=True)
+    filial_id = Column(Integer)
+    costumer_id = Column(Integer)
+    phone = Column(String(255))
+    text = Column(String(255))
+    date = Column(DateTime, default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    status = Column(Boolean)
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))

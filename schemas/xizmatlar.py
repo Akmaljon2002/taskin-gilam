@@ -1,5 +1,7 @@
 from datetime import datetime
 from enum import Enum
+from typing import Optional
+
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from db import SessionLocal
@@ -64,3 +66,34 @@ class XizmatYuvishPut(BaseModel):
     boy: float = Field(..., le=BOY_MAX)
     hajm: float = Field(..., le=HAJM_MAX)
     narx: float
+
+
+class XizmatTuriEnum(Enum):
+    kilogramm = "kilogramm"
+    kv_metr = "kv metr"
+    metr = "metr"
+    dona = "dona"
+
+
+class XizmatCreate(BaseModel):
+    xizmat_turi: str
+    olchov: XizmatTuriEnum
+    status: XizmatStatus
+    operator_kpi_line: int
+    narx: int
+    min_narx: int
+    discount_for_own: int
+    saygak_narx: int
+
+
+class XizmatUpdate(BaseModel):
+    xizmat_id: int
+    xizmat_turi: str
+    olchov: XizmatTuriEnum
+    status: XizmatStatus
+    operator_kpi_line: int
+    narx: int
+    min_narx: int
+    discount_for_own: int
+    saygak_narx: int
+

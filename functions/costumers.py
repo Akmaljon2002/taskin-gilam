@@ -3,14 +3,19 @@ from fastapi import HTTPException
 from sqlalchemy import asc
 from sqlalchemy.orm import joinedload, load_only
 from datetime import datetime
-from models.models import Costumers, Mijoz_kirim, Nasiya, Recall, Orders, Xizmatlar, Chegirma
+
+from functions.sozlamalar import check_limit_def
+from models.models import Costumers, Mijoz_kirim, Nasiya, Recall, Orders, Xizmatlar, Chegirma, User, Sms_template, \
+    Sms_setting, Sms_sended
 from schemas.costumers import TolovTuri
+from utils.benchmark import reform_text
 from utils.orders import order_nomer
 from utils.pagination import pagination, save_in_db
+from utils.send_sms import send_sms, SendSmsRequest
 
 
-def all_costumers(search, page, limit, db):
-    costumers = db.query(Costumers)
+def all_costumers(search, page, limit, user, db):
+    costumers = db.query(Costumers).filter(Costumers.costumers_filial_id == user.filial_id)
     if search:
         search_formatted = "%{}%".format(search)
         costumers = costumers.filter(
@@ -33,7 +38,7 @@ def history_costumer(search, page, limit, costumer_id, db):
 
 
 def nasiyalar(search, page, limit, costumer_id, db):
-    nasiyalar = db.query(Nasiya).filter(Nasiya.nasiyachi_id == costumer_id).options(
+    nasiyalar = db.query(Nasiya).filter(Nasiya.nasiyachi_id == costumer_id, Nasiya.status == 1).options(
         load_only("summa", "nasiya", "ber_date"), joinedload("order").options(load_only("nomer")))
     if search:
         search_formatted = "%{}%".format(search)
@@ -43,7 +48,8 @@ def nasiyalar(search, page, limit, costumer_id, db):
     return pagination(nasiyalar, page, limit)
 
 
-def create_costumer_order(form, user_id, filial_id, db):
+async def create_costumer_order(form, user_id, filial_id, db):
+    user = db.query(User).filter(User.id == user_id).first()
     phone_val = db.query(Costumers).filter(Costumers.costumer_phone_1 == f"+998{form.costumer_phone_1}").first()
     if phone_val:
         raise HTTPException(status_code=400, detail="Bunda telefon nomer oldin royhatdan o'tkazilgan!")
@@ -82,7 +88,11 @@ def create_costumer_order(form, user_id, filial_id, db):
         db.add(new_recall)
 
     if form.buyurtma:
+        buyutma_limit = check_limit_def(user, db)
+        # if not buyutma_limit['buyurtma_olish_state']:
+        #     raise HTTPException(detail="Sizning limitingiz tugagan!", status_code=400)
         nomer = order_nomer(db)
+        driver = db.query(User).filter(User.id == form.buyurtma_olish.order_driver, User.role == "transport").first()
         new_order = Orders(
             costumer_id=new_costumer.id,
             nomer=nomer,
@@ -104,12 +114,37 @@ def create_costumer_order(form, user_id, filial_id, db):
                 new_chegirma = Chegirma(
                     order_id=new_order.order_id,
                     xizmat_id=x_item.id,
-                    summa=x_item.summa-x_item.chegirma_summa,
+                    summa=x_item.summa - x_item.chegirma_summa,
                     created_at=datetime.now(pytz.timezone('Asia/Tashkent')),
                     updated_at="0000-00-00 00:00:00"
                 )
                 db.add(new_chegirma)
-
+        sms_template = db.query(Sms_template).filter(Sms_template.filial_id == filial_id,
+                                                     Sms_template.keyword == "add_user").first()
+        sms_text = sms_template.text
+        if not driver:
+            transport_name = ""
+            transport_phone = ''
+        else:
+            transport_name = driver.fullname
+            transport_phone = driver.phone
+        text_reform = await reform_text(text_str=sms_text, user=new_costumer.costumer_name, operator=user.fullname,
+                                        order_id=new_order.nomer, operator_phone=user.phone,
+                                        transport=transport_name, transport_phone=transport_phone)
+        sms_phone = new_costumer.costumer_phone_1.replace("+", "")
+        sms_set = db.query(Sms_setting).filter(Sms_setting.filial_id == filial_id).first()
+        if sms_set.foydalanuvchi_qoshilganda:
+            sms_new = Sms_sended(
+                filial_id=filial_id,
+                costumer_id=new_costumer.id,
+                phone=sms_phone,
+                text=text_reform,
+                status=0,
+                date=datetime.now(pytz.timezone('Asia/Tashkent')),
+                updated_at='0000-00-00 00:00:00'
+            )
+            await send_sms(m_to=sms_phone, m_text=text_reform)
+            save_in_db(db, sms_new)
     db.commit()
     return True
 
@@ -139,15 +174,24 @@ def create_costumer(form, user_id, filial_id, db):
     return True
 
 
-async def update_costumer(form, db):
-    costumer = db.query(Costumers).filter_by(id=form.id)
+async def update_costumer(form, user, db):
+    costumer = db.query(Costumers).filter_by(id=form.id, costumers_filial_id=user.filial_id)
     if costumer.first() is None:
         raise HTTPException(status_code=404, detail="Costumer not found!")
+    phone1_val = f"+998{form.costumer_phone_1}"
+    phone2_val = ''
+    if form.costumer_phone_2:
+        phone2_val = f"+998{form.costumer_phone_1}"
+    if costumer.first().costumer_phone_1 != phone1_val:
+        check_phone = db.query(Costumers).filter(Costumers.costumer_phone_1 == phone1_val,
+                                                 Costumers.costumers_filial_id == user.filial_id).first()
+        if check_phone:
+            raise HTTPException(status_code=400, detail="Phone already exists!")
 
     costumer.update({
         Costumers.costumer_name: form.costumer_name,
-        Costumers.costumer_phone_1: form.costumer_phone_1,
-        Costumers.costumer_phone_2: form.costumer_phone_2,
+        Costumers.costumer_phone_1: phone1_val,
+        Costumers.costumer_phone_2: phone2_val,
         Costumers.costumer_addres: form.costumer_addres,
         Costumers.manba: form.manba,
         Costumers.costumer_turi: form.costumer_turi,
@@ -189,7 +233,7 @@ def nasiya_olish(form, user, db):
     if nasiya.summa < ol_summa:
         raise HTTPException(detail="Nasiya summadan katta summa kiritildi", status_code=400)
     nasiya.summa -= ol_summa
-    if ol_summa>0:
+    if ol_summa > 0:
         mijoz_kirim = Mijoz_kirim(
             summa=ol_summa,
             tolov_turi=tolov_turi,
@@ -249,5 +293,3 @@ def nasiya_tasdiqlash(nasiya_id, ber_date, db):
     nasiya.ber_date = ber_date
     db.commit()
     return True
-
-

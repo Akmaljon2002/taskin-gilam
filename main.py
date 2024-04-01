@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from db import Base, engine
-from routers import auth, users, costumers, branches, orders, transport, xizmatlar, washing, qadoqlash, tokcha, operator
+from routers import auth, users, costumers, branches, orders, transport, xizmatlar, washing, qadoqlash, tokcha, \
+    operator, sozlamalar, millat
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -91,4 +92,16 @@ app.include_router(
     operator.router_operator,
     prefix='/operator',
     tags=['Operator section'],
+)
+
+app.include_router(
+    sozlamalar.router_sozlamalar,
+    prefix='/sozlamalar',
+    tags=['Sozlamalar section'],
+)
+
+app.include_router(
+    millat.router_millat,
+    prefix='/millat',
+    tags=['Millat section'],
 )

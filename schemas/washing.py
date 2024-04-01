@@ -107,3 +107,4 @@ class CleanResponse3(CleanResponse):
     class Config:
         from_attributes = True
 
+

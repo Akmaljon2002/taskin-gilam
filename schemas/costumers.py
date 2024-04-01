@@ -107,7 +107,11 @@ class CostumerResponseModel(BaseModel):
     id: int
     costumer_name: str
     costumer_phone_1: str
+    costumer_phone_2: str
     costumer_addres: str
+    manba: str
+    izoh: str
+    costumer_turi: str
     buyurtma: bool = False
     costumer_date: datetime
 

@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 from db import get_db
 from functions.orders import *
 from routers.auth import current_active_user
-from schemas.orders import Order_status, Order_accept, CancelOrder, OrderCurrentlyResponseModel, MuddatEnum
+from schemas.orders import Order_status, Order_accept, CancelOrder, OrderCurrentlyResponseModel, MuddatEnum, \
+    OrderCreate1, OrderToDriverResponse, ReCleanResponseModel, OrderToAcceptResponse
 from schemas.users import UserCurrent
 from utils.pagination import PaginationResponseModel
 from utils.role_verification import role_verification
@@ -23,28 +24,30 @@ async def get_orders(search: str = None, order_id: int = 0, page: int = 1, limit
 
 @router_order.get('/to_drivers', status_code=200)
 async def get_orders_driver(status: Order_status, search: str = None, order_id: int = 0, page: int = 1, limit: int = 25,
-                            db: Session = Depends(get_db), current_user: UserCurrent = Depends(current_active_user)):
+                            db: Session = Depends(get_db), current_user: UserCurrent = Depends(current_active_user)) ->\
+        PaginationResponseModel[OrderToDriverResponse] | OrderToDriverResponse:
     role_verification(current_user, inspect.currentframe().f_code.co_name)
     if order_id:
-        return order_to_drivers(order_id, db)
-    return orders_to_drivers(search, page, limit, current_user.id, status, db)
+        return order_to_drivers(order_id, current_user, db)
+    return orders_to_drivers(search, page, limit, current_user, status, db)
 
 
 @router_order.get('/recleans', status_code=200)
 async def get_orders_driver(search: str = None, clean_id: int = 0, page: int = 1, limit: int = 25,
-                            db: Session = Depends(get_db), current_user: UserCurrent = Depends(current_active_user)):
+                            db: Session = Depends(get_db), current_user: UserCurrent = Depends(current_active_user)) ->\
+        PaginationResponseModel[ReCleanResponseModel] | ReCleanResponseModel:
     role_verification(current_user, inspect.currentframe().f_code.co_name)
     if clean_id:
-        return reclean(clean_id, db)
-    return recleans(search, page, limit, current_user.id, db)
+        return reclean(clean_id, current_user, db)
+    return recleans(search, page, limit, current_user, db)
 
 
 @router_order.put('/accept', status_code=200)
 async def accept_order_driver(form: Order_accept,
-                              db: Session = Depends(get_db), current_user: UserCurrent = Depends(current_active_user)):
+                              db: Session = Depends(get_db), current_user: UserCurrent = Depends(current_active_user)) \
+        -> OrderToAcceptResponse:
     role_verification(current_user, inspect.currentframe().f_code.co_name)
-    if accept_order(form, current_user.id, current_user.filial_id, db):
-        raise HTTPException(status_code=201, detail="Successfully!")
+    return accept_order(form, current_user.id, current_user.filial_id, db)
 
 
 @router_order.put('/edit_driver', status_code=200)
@@ -74,7 +77,15 @@ async def called_order_put(order_id: int,
 @router_order.get('/currently', status_code=200)
 async def get_orders_driver(status_clean: CleanStatus = None, muddat: MuddatEnum = None, search: str = None,
                             page: int = 1, limit: int = 25, db: Session = Depends(get_db),
-                            current_user: UserCurrent = Depends(current_active_user)) ->\
+                            current_user: UserCurrent = Depends(current_active_user)) -> \
         PaginationResponseModel[OrderCurrentlyResponseModel]:
     role_verification(current_user, inspect.currentframe().f_code.co_name)
     return currently_def(search, status_clean, muddat, page, limit, current_user, db)
+
+
+@router_order.post('/create_order', )
+async def add_order(form: OrderCreate1,
+                    db: Session = Depends(get_db), current_user: UserCurrent = Depends(current_active_user)):
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
+    if create_order(form, current_user, db):
+        raise HTTPException(status_code=201, detail="Created successfully!")

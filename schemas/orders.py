@@ -4,6 +4,7 @@ from typing import Optional, List, Union
 from pydantic import BaseModel, Field, model_validator
 from db import STATIC
 from models.models import Clean
+from schemas.millat import MillatResponseModel
 from schemas.xizmatlar import XizmatlarBuyurtma
 from schemas.washing import Xizmat as XizmatXizmat
 
@@ -20,6 +21,15 @@ class XizmatChegirma(BaseModel):
 
 
 class OrderCreate(BaseModel):
+    izoh: str = None
+    order_driver: Optional[str] = "hamma"
+    order_skidka_foiz: int = Field(ge=0)
+    order_skidka_sum: int = Field(ge=0)
+    xizmat: List[XizmatChegirma]
+
+
+class OrderCreate1(BaseModel):
+    costumer_id: int
     izoh: str = None
     order_driver: Optional[str] = "hamma"
     order_skidka_foiz: int = Field(ge=0)
@@ -293,21 +303,9 @@ class TayyorKvitansiyaClean(BaseModel):
     gilam_boyi: float
     clean_hajm: float
     reclean_place: int = None
-    options: Optional[TayyorKvitansiyaOptions]=None
 
     class Config:
         arbitrary_types_allowed = True
-
-    @model_validator(mode='after')
-    def val(self) -> "TayyorKvitansiyaClean":
-        self.options = TayyorKvitansiyaOptions(
-            discount=discount_clean(self.xizmat.narx,self.narx, 'check.png'),
-            check=res_clean(self.reclean_place, 'check.png'),
-            res=res_clean(self.clean_status, 'restart.png')
-        )
-        delattr(self, 'reclean_place')
-        delattr(self, 'xizmat')
-        return self
 
 
 class TayyorKvitansiyaXizmat(BaseModel):
@@ -366,3 +364,56 @@ class MuddatEnum(Enum):
     qizil = 'qizil'
     sariq = 'sariq'
     yashil = 'yashil'
+
+
+class CostumerOrder(BaseModel):
+    id: int
+    costumer_name: str
+    costumer_addres: str
+    costumer_phone_1: str
+    costumer_phone_2: Optional[str] = None
+    millat: Optional[MillatResponseModel]
+
+
+class OrderToDriverResponse(BaseModel):
+    order_id: int
+    nomer: int
+    izoh: str
+    izoh2: str
+    izoh3: str
+    costumer: CostumerOrder | None
+    operator: User | None
+    driver: User | None
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class OrderToRecleanResponse(BaseModel):
+    order_id: int
+    nomer: int
+    izoh: str
+    izoh2: str
+    izoh3: str
+    operator: User | None
+
+
+class ReCleanResponseModel(BaseModel):
+    id: int
+    gilam_eni: float
+    gilam_boyi: float
+    clean_hajm: float
+    clean_narx: float
+    narx: int
+    clean_status: str
+    order: Optional[OrderToRecleanResponse]
+    costumer: CostumerOrder | None
+    driver: User | None
+
+
+class OrderToAcceptResponse(BaseModel):
+    order_id: int
+    nomer: int
+    izoh: str
+    izoh2: str
+    izoh3: str

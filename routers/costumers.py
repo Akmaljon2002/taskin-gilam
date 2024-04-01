@@ -22,7 +22,7 @@ router_costumer = APIRouter()
 async def add_costumer(form: CostumerCreateOrder,
                        db: Session = Depends(get_db), current_user: UserCurrent = Depends(current_active_user)):
     role_verification(current_user, inspect.currentframe().f_code.co_name)
-    if create_costumer_order(form, current_user.id, current_user.filial_id, db):
+    if await create_costumer_order(form, current_user.id, current_user.filial_id, db):
         raise HTTPException(status_code=201, detail="Created successfully!")
 
 
@@ -38,16 +38,19 @@ async def add_costumer(form: CostumerCreate,
 async def get_costumers(search: str = None, costumer_id: int = 0, page: int = 1,
                         limit: int = 25, db: Session = Depends(get_db),
                         current_user: UserCurrent = Depends(current_active_user)) -> \
-        PaginationResponseModel[CostumerResponseModel]:
+        PaginationResponseModel[CostumerResponseModel] | CostumerResponseModel:
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
     if costumer_id:
-        return db.query(Costumers).filter(Costumers.id == costumer_id).first()
-    return all_costumers(search, page, limit, db)
+        return db.query(Costumers).filter(Costumers.id == costumer_id,
+                                          Costumers.costumers_filial_id == current_user.filial_id).first()
+    return all_costumers(search, page, limit, current_user, db)
 
 
 @router_costumer.put("/update")
 async def costumer_update(form: CostumerUpdate, db: Session = Depends(get_db),
                           current_user: UserCurrent = Depends(current_active_user)):
-    if await update_costumer(form, db):
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
+    if await update_costumer(form, current_user, db):
         raise HTTPException(status_code=200, detail="Updated successfully!")
 
 
@@ -55,6 +58,7 @@ async def costumer_update(form: CostumerUpdate, db: Session = Depends(get_db),
 async def money_from_costumer(search: str = None, costumer_id: int = ..., page: int = 1,
                               limit: int = 25, db: Session = Depends(get_db),
                               current_user: UserCurrent = Depends(current_active_user)):
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
     return history_costumer(search, page, limit, costumer_id, db)
 
 
@@ -62,12 +66,14 @@ async def money_from_costumer(search: str = None, costumer_id: int = ..., page: 
 async def nasiyalar_get(search: str = None, nasiyachi_id: int = ..., page: int = 1,
                         limit: int = 25, db: Session = Depends(get_db),
                         current_user: UserCurrent = Depends(current_active_user)):
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
     return nasiyalar(search, page, limit, nasiyachi_id, db)
 
 
 @router_costumer.get('/nasiyachilar', status_code=200)
 async def nasiyachilar_get(db: Session = Depends(get_db),
                            current_user: UserCurrent = Depends(current_active_user)) -> List[NasiyachiResponseModel]:
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
     return nasiyachilar(current_user.filial_id, db)
 
 
@@ -76,12 +82,14 @@ async def nasiyalar_all_get(search: str = None, nasiyachi_id: int = 0, page: int
                             limit: int = 25, db: Session = Depends(get_db),
                             current_user: UserCurrent = Depends(current_active_user)) -> \
         PaginationResponseModel[NasiyalarResponseModel]:
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
     return nasiyalar_all(search, page, limit, nasiyachi_id, current_user.filial_id, db)
 
 
 @router_costumer.put("/nasiya_olish")
 async def costumer_update(form: NasiyaOlish, db: Session = Depends(get_db),
                           current_user: UserCurrent = Depends(current_active_user)):
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
     if nasiya_olish(form, current_user, db):
         raise HTTPException(status_code=200, detail="Updated successfully!")
 
@@ -89,6 +97,10 @@ async def costumer_update(form: NasiyaOlish, db: Session = Depends(get_db),
 @router_costumer.put("/nasiya_kechish")
 async def costumer_update(nasiya_id: int, db: Session = Depends(get_db),
                           current_user: UserCurrent = Depends(current_active_user)):
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
+    """
+        Nasiyani kechish tugamsi bosilganda ishlatiladigan update
+    """
     if nasiya_kechish(nasiya_id, current_user, db):
         raise HTTPException(status_code=200, detail="Updated successfully!")
 
@@ -97,6 +109,7 @@ async def costumer_update(nasiya_id: int, db: Session = Depends(get_db),
 async def nasiyalar_tasdiqlanmagan_get(page: int = 1, limit: int = 25, db: Session = Depends(get_db),
                                        current_user: UserCurrent = Depends(current_active_user)) -> \
         PaginationResponseModel[NasiyalarResponseModel]:
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
     """
     Nasiyaga yozilib tasdiqlanmaganlar keladi
     """
@@ -106,6 +119,7 @@ async def nasiyalar_tasdiqlanmagan_get(page: int = 1, limit: int = 25, db: Sessi
 @router_costumer.put("/nasiya_tasdiqlash")
 async def costumer_update(nasiya_id: int, ber_date: date, db: Session = Depends(get_db),
                           current_user: UserCurrent = Depends(current_active_user)):
+    role_verification(current_user, inspect.currentframe().f_code.co_name)
     """
     Nasiyaga yozilib tasdiqlanmagan nasiyalarni tasdiqlash
     """
