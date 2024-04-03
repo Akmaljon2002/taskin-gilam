@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import TypeVar, Generic, List
 import pytz
 from fastapi import HTTPException
-from pydantic.generics import GenericModel
+from pydantic import BaseModel
 
 
 def pagination(form, page, limit):
@@ -62,7 +62,7 @@ allowed_phones_source = ["customers", "user", "market"]
 DataType = TypeVar("DataType")
 
 
-class PaginationResponseModel(GenericModel, Generic[DataType]):
+class PaginationResponseModel(BaseModel, Generic[DataType]):
     current_page: int
     limit: int
     pages: int
