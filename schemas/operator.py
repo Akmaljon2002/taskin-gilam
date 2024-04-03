@@ -29,7 +29,7 @@ class PaginationResponseModel1(GenericModel, Generic[DataType]):
     data: List[DataType] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class OrderRpModel(BaseModel):
@@ -88,7 +88,7 @@ class PaginationRejadagilarResponseModel1(GenericModel, Generic[DataType]):
     data: List[DataType] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class OrderSixMonthCurrentlyResponseModel(BaseModel):
@@ -114,7 +114,7 @@ class PaginationResponseModel2(GenericModel, Generic[DataType]):
     data: List[DataType] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class Last_operator2ResponseModel(BaseModel):

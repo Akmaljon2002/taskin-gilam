@@ -69,5 +69,5 @@ class PaginationResponseModel(GenericModel, Generic[DataType]):
     data: List[DataType] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
