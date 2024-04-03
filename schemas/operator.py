@@ -2,7 +2,6 @@ from datetime import datetime, date, time, timedelta
 from enum import Enum
 from typing import Optional, List, Generic
 from pydantic import BaseModel
-from pydantic.generics import GenericModel
 from schemas.orders import Costumer
 from schemas.users import DriverResponseModel
 from utils.pagination import DataType
@@ -17,7 +16,7 @@ class DriverCurrentlyResponseModel(BaseModel):
     driver_order_count: int
 
 
-class PaginationResponseModel1(GenericModel, Generic[DataType]):
+class PaginationResponseModel1(BaseModel, Generic[DataType]):
     current_page: int
     limit: int
     pages: int
@@ -29,7 +28,7 @@ class PaginationResponseModel1(GenericModel, Generic[DataType]):
     data: List[DataType] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class OrderRpModel(BaseModel):
@@ -73,7 +72,7 @@ class OperatorCurrentlyResponseModel(BaseModel):
     operator_count: int
 
 
-class PaginationRejadagilarResponseModel1(GenericModel, Generic[DataType]):
+class PaginationRejadagilarResponseModel1(BaseModel, Generic[DataType]):
     current_page: int
     limit: int
     pages: int
@@ -88,7 +87,7 @@ class PaginationRejadagilarResponseModel1(GenericModel, Generic[DataType]):
     data: List[DataType] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class OrderSixMonthCurrentlyResponseModel(BaseModel):
@@ -103,7 +102,7 @@ class CallingResponseModel(BaseModel):
     calling: bool
 
 
-class PaginationResponseModel2(GenericModel, Generic[DataType]):
+class PaginationResponseModel2(BaseModel, Generic[DataType]):
     current_page: int
     limit: int
     pages: int
@@ -114,7 +113,7 @@ class PaginationResponseModel2(GenericModel, Generic[DataType]):
     data: List[DataType] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class Last_operator2ResponseModel(BaseModel):

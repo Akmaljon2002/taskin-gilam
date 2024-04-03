@@ -30,7 +30,7 @@ class XizmatlarResponceModel(BaseModel):
     updated_at: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class XizmatStatus(Enum):
