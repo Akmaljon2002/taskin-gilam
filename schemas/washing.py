@@ -1,4 +1,6 @@
 from enum import Enum
+from typing import List
+
 from pydantic import BaseModel, model_validator
 from utils.olchov import olchov
 
@@ -51,7 +53,7 @@ class XizmatCleanAllResponse(BaseModel):
     xizmat_turi: str
     olchov: str
     # cleans_count: int
-    cleans: list[CleanResponse] = None
+    cleans: List[CleanResponse] = None
 
     class Config:
         from_attributes = True

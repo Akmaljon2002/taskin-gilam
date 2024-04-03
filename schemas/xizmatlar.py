@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import List
 
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -39,8 +39,8 @@ class XizmatStatus(Enum):
 
 
 class XizmatCleanCountResponse(BaseModel):
-    mahsulot_all: list[XizmatCleanAllResponse] = None
-    mahsulot: list[CleanResponse2] = None
+    mahsulot_all: List[XizmatCleanAllResponse] = None
+    mahsulot: List[CleanResponse2] = None
     yuvilmagan: int
 
     class Config:
@@ -48,7 +48,7 @@ class XizmatCleanCountResponse(BaseModel):
 
 
 class XizmatQuridiCountResponse(BaseModel):
-    mahsulot: list[CleanResponse3] = None
+    mahsulot: List[CleanResponse3] = None
     quriganlar: int
 
     class Config:
