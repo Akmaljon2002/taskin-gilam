@@ -1,5 +1,5 @@
 import pytz
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Date, Float, func, and_
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Date, Float, func, and_, Time
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 from db import Base
@@ -453,3 +453,38 @@ class Sms_sended(Base):
     status = Column(Boolean)
     created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
     updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+
+
+class Fingerprint(Base):
+    __tablename__ = 'fingerprint'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(50))
+    token = Column(String(50))
+    filial_id = Column(Integer, ForeignKey("filial.filial_id"))
+    date = Column(DateTime, default="0000-00-00 00:00:00")
+
+
+class Davomat(Base):
+    __tablename__ = 'davomat'
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("user.id"))
+    sana = Column(Date)
+    status = Column(Boolean)
+    filial_id = Column(Integer, ForeignKey("filial.filial_id"))
+    keldi = Column(Boolean)
+    ketdi = Column(Boolean)
+    keldi_time = Column(Time)
+    ketdi_time = Column(Time)
+    maosh = Column(Integer)
+    type = Column(String(50))
+    sanavaqt = Column(DateTime)
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+    fingerprint_id = Column(Integer, ForeignKey("fingerprint.id"))
+
+    fingerprint = relationship('Fingerprint')
+    user = relationship('User')
+
+
+
+

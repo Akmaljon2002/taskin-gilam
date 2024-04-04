@@ -72,3 +72,4 @@ class UserResponseModel(BaseModel):
     skald_limit: int
     zakaz_status: int
 
+

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from db import Base, engine
 from routers import auth, users, costumers, branches, orders, transport, xizmatlar, washing, qadoqlash, tokcha, \
-    operator, sozlamalar, millat
+    operator, sozlamalar, millat, davomat
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -104,4 +104,10 @@ app.include_router(
     millat.router_millat,
     prefix='/millat',
     tags=['Millat section'],
+)
+
+app.include_router(
+    davomat.router_davomat,
+    prefix='/davomat',
+    tags=['Davomat section'],
 )
