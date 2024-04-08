@@ -486,5 +486,35 @@ class Davomat(Base):
     user = relationship('User')
 
 
+class Kirim(Base):
+    __tablename__ = 'kirim'
+    kirim_id = Column(Integer, primary_key=True)
+    kirim_user_id = Column(Integer)
+    kirim_filial_id = Column(Integer, ForeignKey("filial.filial_id"))
+    kassachi_id = Column(Integer, ForeignKey("user.id"))
+    kirim_summ = Column(Float)
+    tolov_turi = Column(String(100))
+    kirim_date = Column(DateTime)
+    user_fullname = Column(String(100))
+    kassachi_fullname = Column(String(100))
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))
+
+    kassachi = relationship("User")
+    hodim = relationship('User', foreign_keys=[kirim_user_id],
+                         primaryjoin=lambda: and_(User.id == Kirim.kirim_user_id))
 
 
+class Chiqim(Base):
+    __tablename__ = 'chiqim'
+    chiqim_id = Column(Integer, primary_key=True)
+    chiqim_user_id = Column(Integer)
+    chiqim_filial_id = Column(Integer, ForeignKey("filial.filial_id"))
+    chiqim_summ = Column(Float)
+    chiqim_firma = Column(Integer)
+    chiqim_shaxsiy = Column(Integer)
+    chiqim_izoh = Column(String(255))
+    doimiy_izoh = Column(String(100))
+    chiqim_date = Column(DateTime)
+    created_at = Column(DateTime(timezone=True), default=datetime.now(pytz.timezone('Asia/Tashkent')))
+    updated_at = Column(DateTime(timezone=True), onupdate=datetime.now(pytz.timezone('Asia/Tashkent')))

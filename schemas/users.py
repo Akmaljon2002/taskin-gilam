@@ -73,3 +73,28 @@ class UserResponseModel(BaseModel):
     zakaz_status: int
 
 
+class UserForKirimResponseModel(BaseModel):
+    id: int
+    username: str
+    role: str
+    fullname: str
+    click: int
+    filial_id: int
+    balance: int
+    oylik: int
+    plastik: int
+    phone: int
+    phone2: int
+    oylik: int
+    kpi: float
+    maosh: float
+    ozroq_kpi: float
+    moi_zvonki_user_name: str
+    user_moi_zvonki_address: str
+    user_moi_zvonki_api: str
+    zayavka_limit: int
+    topshirish_limit: int
+    skald_limit: int
+    zakaz_status: int
+
+
